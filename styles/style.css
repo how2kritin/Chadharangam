@@ -1,0 +1,21 @@
+body{
+    background-color: #111827;
+}
+
+.board{
+    display: grid;
+    grid-template-columns: repeat(8,1fr);
+}
+
+.black,.white{
+    width: 100px;
+    height: 100px;
+}
+
+.black{
+    background-color: #b58863;
+}
+
+.white{
+    background-color: #f0d9b5;
+}
