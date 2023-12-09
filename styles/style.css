@@ -30,6 +30,10 @@ body{
     height: 80px;
 }
 
+.piece:hover{
+    cursor: pointer;
+}
+
 img{
     -webkit-user-drag: none;
     user-select: none;
