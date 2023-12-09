@@ -12,6 +12,9 @@ body{
 .black,.white{
     width: auto;
     aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .black{
@@ -20,4 +23,17 @@ body{
 
 .white{
     background-color: #f0d9b5;
+}
+
+.piece{
+    width: 80px;
+    height: 80px;
+}
+
+img{
+    -webkit-user-drag: none;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
 }
