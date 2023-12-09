@@ -1,7 +1,8 @@
 const boardHtml=document.querySelector(".board");
 const body=document.querySelector("body");
 let white_pov=true;
-let drag=false;
+let clickedSqr=false;
+let sourceSqr,destinationSqr;
 let squares=[];
 let board=[
     [-5,-2,-3,-9,-10,-3,-2,-5],
@@ -28,6 +29,14 @@ function intToPngName(piece){
     }
     return name;
 }
+//function that takes a square(div) as input and returns position in the board (int)
+function findSqr(div_ref){
+    for(let i=0;i<8;i++){
+        for(let j=0;j<8;j++){
+            if(squares[i][j]==div_ref) return [i,j];
+        }
+    }
+}
 //making board and storing references in squares 2d array
 for(let i=0;i<8;i++){
     let row=[];
@@ -42,15 +51,38 @@ for(let i=0;i<8;i++){
     }
     squares.push(row);
 }
+function addImgToSqr(square,piece){
+    let img=document.createElement("img");
+    img.classList.add("piece");
+    img.src="./images/"+intToPngName(piece)+".png";
+    square.appendChild(img);
+}
 //adding pieces
 for(let i=0;i<8;i++){
     for(let j=0;j<8;j++){
+        squares[i][j].addEventListener("click",sqrClickedListener);
         if(board[i][j]){
-            let img=document.createElement("img");
-            img.classList.add("piece");
-            img.src="./images/"+intToPngName(board[i][j])+".png";
-            squares[i][j].appendChild(img);
+            addImgToSqr(squares[i][j],board[i][j]);
         }
     }
 }
-
+//function when a square is clicked
+function sqrClickedListener(event){
+    if(clickedSqr){
+        destinationSqr=findSqr(this);
+        squares[sourceSqr[0]][sourceSqr[1]].innerHTML="";
+        squares[destinationSqr[0]][destinationSqr[1]].innerHTML="";
+        board[destinationSqr[0]][destinationSqr[1]]=board[sourceSqr[0]][sourceSqr[1]];
+        addImgToSqr(squares[destinationSqr[0]][destinationSqr[1]],board[destinationSqr[0]][destinationSqr[1]]);
+        clickedSqr=false;
+    }else{
+        sourceSqr=findSqr(this);
+        if(board[sourceSqr[0]][sourceSqr[1]]){
+            clickedSqr=true;
+        }else{
+            sourceSqr=undefined;
+            clickedSqr=false;
+        }
+        console.log(sourceSqr);
+    }
+}
