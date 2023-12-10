@@ -6,6 +6,7 @@ body{
     margin: auto;
     display: grid;
     width: 700px;
+    /* gap:2px; */
     grid-template-columns: repeat(8,1fr);
 }
 
