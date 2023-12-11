@@ -5,8 +5,7 @@ body{
 .board{
     margin: auto;
     display: grid;
-    width: 700px;
-    /* gap:2px; */
+    width: 650px;
     grid-template-columns: repeat(8,1fr);
 }
 
@@ -27,8 +26,8 @@ body{
 }
 
 .piece{
-    width: 80px;
-    height: 80px;
+    /* width: 80px;
+    height: 80px; */
 }
 
 .piece:hover{
@@ -41,4 +40,13 @@ img{
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+}
+
+.result{
+    position: absolute;
+    border: red 3px solid;
+    left:0px;
+    top:0px;
+    background-color: yellow;
+    font-size: 35px;
 }
