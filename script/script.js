@@ -197,7 +197,7 @@ function movesFinder(position,piece){
         //and the most important move.. en passant
         r=position[0];c=position[1];
         //if latest move is made by a pawn, and the pawn has made 2 moves for its first move and the pawn is adjacent to the selected pawn,, en passant is possible
-        if(white_move&&nmoves>0){
+        if(white_move&&nmoves>0&&r==4){
             if(board[moves[nmoves-1][1][0]][moves[nmoves-1][1][1]]==-1){
                 if(moves[nmoves-1][1][0]-moves[nmoves-1][0][0]==2){
                     let t=moves[nmoves-1][1][1];
@@ -209,7 +209,7 @@ function movesFinder(position,piece){
                 }
             }
         }
-        if(!white_move&&nmoves>0){
+        if(!white_move&&r==3){
             if(board[moves[nmoves-1][1][0]][moves[nmoves-1][1][1]]==1){
                 if(moves[nmoves-1][1][0]-moves[nmoves-1][0][0]==-2){
                     let t=moves[nmoves-1][1][1];
