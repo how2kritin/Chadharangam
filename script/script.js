@@ -165,7 +165,7 @@ function isInCheck(white){
         }
     }
     console.log("king is at "+r+" "+c);
-    let attackingPieces=[1,2,3,5,9];
+    let attackingPieces=[1,2,3,5,9,10];
     for(let i=0;i<5;i++){
         let attackingSpots=movesFinder([r,c],(white)?attackingPieces[i]:(0-attackingPieces[i]));
         console.log("attacking piece "+attackingPieces[i]);
