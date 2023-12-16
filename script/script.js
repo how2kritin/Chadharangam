@@ -103,17 +103,20 @@ function sqrClickedListener(event){
             //adding piece to final sqr
             addImgToSqr(squares[destinationSqr[0]][destinationSqr[1]],board[destinationSqr[0]][destinationSqr[1]]);
             //if castling is enabled and destination sqrs col is either 2 or 6, then put the rook at the correct position
-            if(castlingPossible&&destinationSqr[1]==2){
-                board[sourceSqr[0]][3]=board[sourceSqr[0]][0];
-                board[sourceSqr[0]][0]=0;
-                addImgToSqr(squares[sourceSqr[0]][3],board[sourceSqr[0]][3]);
-                squares[sourceSqr[0]][0].innerHTML="";
-            }
-            else if(castlingPossible&&destinationSqr[1]==6){
-                board[sourceSqr[0]][5]=board[sourceSqr[0]][7];
-                board[sourceSqr[0]][7]=0;
-                addImgToSqr(squares[sourceSqr[0]][5],board[sourceSqr[0]][5]);
-                squares[sourceSqr[0]][7].innerHTML="";
+            //also selected piece has to be king
+            if(board[destinationSqr[0]][destinationSqr[1]]==10||board[destinationSqr[0]][destinationSqr[1]]==-10){
+                if(castlingPossible&&destinationSqr[1]==2){
+                    board[sourceSqr[0]][3]=board[sourceSqr[0]][0];
+                    board[sourceSqr[0]][0]=0;
+                    addImgToSqr(squares[sourceSqr[0]][3],board[sourceSqr[0]][3]);
+                    squares[sourceSqr[0]][0].innerHTML="";
+                }
+                else if(castlingPossible&&destinationSqr[1]==6){
+                    board[sourceSqr[0]][5]=board[sourceSqr[0]][7];
+                    board[sourceSqr[0]][7]=0;
+                    addImgToSqr(squares[sourceSqr[0]][5],board[sourceSqr[0]][5]);
+                    squares[sourceSqr[0]][7].innerHTML="";
+                }
             }
             //if enpassant is possible
             if(enPassant!=-1&&destinationSqr[1]==enPassant){
@@ -126,6 +129,7 @@ function sqrClickedListener(event){
             //give the chance to other player
             white_move=!white_move;
         }
+        squares[sourceSqr[0]][sourceSqr[1]].classList.remove("pieceSelected");
         destinationSqr=[-1,-1];
         sourceSqr=[-1,-1];
         //clearing hightlighted squares
@@ -139,10 +143,10 @@ function sqrClickedListener(event){
             castlingPossible=false;
             enPassant=-1;
             legalMoves=legalMovesFinder(sourceSqr,board[sourceSqr[0]][sourceSqr[1]]);
+            squares[sourceSqr[0]][sourceSqr[1]].classList.add("pieceSelected");
             highlightSqrs(true);
         }else{
-            sourceSqr=undefined;
-            highlightSqrs(false);
+            sourceSqr=[-1,-1];
             clickedSqr=false;
         }
         console.log(sourceSqr);
@@ -151,7 +155,8 @@ function sqrClickedListener(event){
 
 function highlightSqrs(yes){
     for(let i=0;i<legalMoves.length;i++){
-        squares[legalMoves[i][0]][legalMoves[i][1]].style.border=(yes)?"2px solid black":"";
+        // squares[legalMoves[i][0]][legalMoves[i][1]].style.border=(yes)?"2px solid black":"";
+        squares[legalMoves[i][0]][legalMoves[i][1]].classList.toggle("selected");
     }
 }
 

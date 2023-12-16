@@ -5,7 +5,7 @@ body{
 .board{
     margin: auto;
     display: grid;
-    width: 650px;
+    max-width: 650px;
     grid-template-columns: repeat(8,1fr);
 }
 
@@ -17,17 +17,29 @@ body{
     align-items: center;
 }
 
+.selected{
+    border: 4px solid green;
+}
+
+.in_check{
+    background-color: red;
+}
+
+
 .black{
-    background-color: #b58863;
+    background-color: #945021;
 }
 
 .white{
-    background-color: #f0d9b5;
+    background-color: #D9A45C;
 }
 
+.pieceSelected{
+    background-color: green;
+}
 .piece{
-    /* width: 80px;
-    height: 80px; */
+    width: 100%;
+    height: 100%;
 }
 
 .piece:hover{
