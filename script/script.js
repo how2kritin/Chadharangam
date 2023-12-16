@@ -166,7 +166,7 @@ function isInCheck(white){
     }
     console.log("king is at "+r+" "+c);
     let attackingPieces=[1,2,3,5,9,10];
-    for(let i=0;i<5;i++){
+    for(let i=0;i<6;i++){
         let attackingSpots=movesFinder([r,c],(white)?attackingPieces[i]:(0-attackingPieces[i]));
         console.log("attacking piece "+attackingPieces[i]);
         console.log(attackingSpots);
@@ -192,7 +192,7 @@ function movesFinder(position,piece){
         //if pawn is on 2nd rank or 7th rank, you can have 2 moves
         if(position[0]==1||position[0]==6){
             r=position[0]-2*piece,c=position[1];
-            if(!board[r][c]) possibleMoves.push([r,c]);
+            if(!board[r][c]&&!(board[r+piece][c])) possibleMoves.push([r,c]);
         }
         //and the most important move.. en passant
         r=position[0];c=position[1];
@@ -325,7 +325,7 @@ function movesFinder(position,piece){
         for(let i=-1;i<=1;i++){
             for(let j=-1;j<=1;j++){
                 //if atleast i or j are non zeroes, then king can go there
-                if(r+i>=0&&r+i<8&&c+j>=0&&c+j<8){
+                if((i||j)&&r+i>=0&&r+i<8&&c+j>=0&&c+j<8){
                     if((board[r+i][c+j]>=0&&piece<0)||(board[r+i][c+j]<=0&&piece>0)){console.log((r+i)+" "+(c+j)); possibleMoves.push([r+i,c+j]);}
                 }
             }
