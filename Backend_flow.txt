@@ -1,0 +1,32 @@
+Basic backend design:
+1. First, define a game instance, associated with 2 players. Maybe for now, create "rooms" perhaps?
+2. Keep track of whether the player chose white or black.
+3. For each game instance, save the current state in a database.
+4. As soon as one of the players makes a move, update the state of the game and load it in for the other player.
+
+User auth:
+1. Maintain a database of player accounts.
+2. Implement authentication.
+3. Implement statistics; after each game, update the player's wins/losses/draws etc.
+
+To decide:
+1. How do you update the state of game on a per-room basis, privately?
+Maybe, you can use the URL for this? Something like /room=<room_name>&user=<username> for each game
+(THIS IS BEFORE AUTH IMPLEMENTATION. NEED TO FIGURE OUT HOW TO PERFORM AUTHENTICATION LATER.)
+2. Randomly generate room_name to give to the player, so that they can share this with another player
+to retrieve data from the database.
+NOTE: Ensure that no 2 rooms have the same room name and no 2 users can have the same username.
+3. After room creation, wait until another player joins the same room. Only then, start a game instance.
+4. To do "real-time" updations, maybe I can just ask the server to send me the state of the game once every x ms? (Polling approach)
+Or, maybe, for the other player, wait until an update is made and only then fetch. Kind of like sockets. Might be tedious.
+5. How to store the state of the game on the database? Need to make a standard.
+
+To-do (apart from the initial to-do I made a week ago):
+1. ENCRYPT PASSWORDS!
+2. DECIDE GAME STATE, AND HOW IT IS STORED!
+3. Possibly allow pre-moves?
+4. Perhaps, maintain a Local Multiplayer mode (without login) and an Online Multiplayer mode (with login)?
+
+Tables I can use:
+1. Users and their stats - username, password (after some sort of encryption), wins, losses, draws
+2. Current Game Instances - room_name, player1_username, player2_username, state of game (TBD)
