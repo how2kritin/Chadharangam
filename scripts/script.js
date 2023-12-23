@@ -14,14 +14,14 @@ let legalMoves=[];
 let squares=[];
 let moves=[],nmoves=0;
 let board=[
-    [-5,-2,-3,-9,-10,-3,-2,-5],
+    [-5,-2,-3,-9,-7,-3,-2,-5],
     [-1,-1,-1,-1,-1,-1,-1,-1],
     [0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0],
     [1,1,1,1,1,1,1,1],
-    [5,2,3,9,10,3,2,5]
+    [5,2,3,9,7,3,2,5]
 ];
 let test=document.querySelector("#test");
 let piece_selected,sqr_selected,sqr_released;
@@ -63,7 +63,7 @@ for(let i=0;i<8;i++){
 function addImgToSqr(square,piece){
     let img=document.createElement("img");
     img.classList.add("piece");
-    img.src="./images/"+intToPngName(piece)+".png";
+    img.src="../images/"+intToPngName(piece)+".png";
     square.appendChild(img);
 }
 //adding pieces
@@ -104,7 +104,7 @@ function sqrClickedListener(event){
             addImgToSqr(squares[destinationSqr[0]][destinationSqr[1]],board[destinationSqr[0]][destinationSqr[1]]);
             //if castling is enabled and destination sqrs col is either 2 or 6, then put the rook at the correct position
             //also selected piece has to be king
-            if(board[destinationSqr[0]][destinationSqr[1]]==10||board[destinationSqr[0]][destinationSqr[1]]==-10){
+            if(board[destinationSqr[0]][destinationSqr[1]]==7||board[destinationSqr[0]][destinationSqr[1]]==-7){
                 if(castlingPossible&&destinationSqr[1]==2){
                     board[sourceSqr[0]][3]=board[sourceSqr[0]][0];
                     board[sourceSqr[0]][0]=0;
@@ -166,11 +166,11 @@ function isInCheck(white){
     let r,c;
     for(let i=0;i<8;i++){
         for(let j=0;j<8;j++){
-            if((white&&board[i][j]==10)||(!white&&board[i][j]==-10)){r=i;c=j;}
+            if((white&&board[i][j]==7)||(!white&&board[i][j]==-7)){r=i;c=j;}
         }
     }
     console.log("king is at "+r+" "+c);
-    let attackingPieces=[1,2,3,5,9,10];
+    let attackingPieces=[1,2,3,5,9,7];
     for(let i=0;i<6;i++){
         let attackingSpots=movesFinder([r,c],(white)?attackingPieces[i]:(0-attackingPieces[i]));
         console.log("attacking piece "+attackingPieces[i]);
@@ -325,7 +325,7 @@ function movesFinder(position,piece){
         }
     }
     //possible moves if its a king
-    if(piece==10||piece==-10){
+    if(piece==7||piece==-7){
         let r=position[0],c=position[1];
         for(let i=-1;i<=1;i++){
             for(let j=-1;j<=1;j++){
