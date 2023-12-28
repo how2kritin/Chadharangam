@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, request, session, flash  # Import Flask and render_template classes from the flask module.
 from flask_cors import CORS
-from flask_socketio import SocketIO, send, join_room, leave_room
+from flask_socketio import SocketIO, send, join_room, leave_room, emit
 import sqlite3
 from coolname import generate_slug  # to create random room codes
 import os  # to create a directory for the databases, if a directory doesn't exist already.
@@ -13,8 +13,6 @@ if not os.path.exists(path):
 # Create the databases
 database = sqlite3.connect('Databases/users.db')
 database.execute("CREATE TABLE IF NOT EXISTS USERS (username TEXT PRIMARY KEY, password TEXT, wins INT DEFAULT 0, losses INT DEFAULT 0, draws INT DEFAULT 0)")  # text passwords for now, encrypt later.
-database = sqlite3.connect('Databases/currGameInstances.db')
-database.execute("CREATE TABLE IF NOT EXISTS GAMES (room_code TEXT PRIMARY KEY, player1_username TEXT, player2_username TEXT, gameState TEXT)")
 
 # Create the flask server and initialise the session
 app = Flask(__name__)
@@ -56,7 +54,7 @@ def handleUser():
         room_code = generate_slug()
         while room_code in rooms:
             room_code = generate_slug()
-        rooms[room_code] = {"members": 0, "allMoves": [], "player1": "", "player2": ""}
+        rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""}, "player2": {"username": "", "clientID": ""}}
 
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
@@ -72,17 +70,17 @@ def handleUser():
             else:
                 print("Successfully logged in!")
                 session['username'], session['room_code'] = username, room_code
-                return redirect("/waiting")
+                return redirect("/game")
         else:
             print("New user, creating an account.")
             cursor.execute("INSERT INTO USERS (username, password) VALUES (?, ?)", (username, password))
             database.commit()
             print("Successfully added this user to the database!")
             session['username'], session['room_code'] = username, room_code
-            return redirect("/waiting")
+            return redirect("/game")
 
 
-@app.route("/waiting")
+@app.route("/game")
 def waitForPlayer():
     username, room_code = session.get('username'), session.get('room_code')
     if room_code is None or username is None or room_code not in rooms:
@@ -105,9 +103,13 @@ def connect(auth):
     join_room(room_code)
     rooms[room_code]["members"] += 1
     if rooms[room_code]["members"] == 1:
-        rooms[room_code]["player1"] = username
+        rooms[room_code]["player1"]["username"] = username
+        rooms[room_code]["player1"]["clientID"] = request.sid
+        print(request.sid)
     else:
-        rooms[room_code]["player2"] = username
+        rooms[room_code]["player2"]["username"] = username
+        rooms[room_code]["player2"]["clientID"] = request.sid
+        print(request.sid)
 
     send({"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
     print(f"{username} has joined the room {room_code}")
@@ -122,40 +124,43 @@ def disconnect():
         if rooms[room_code]["members"] <= 0:  # If the last member has left the room, then delete the room itself.
             del rooms[room_code]
 
-        if rooms[room_code]["player2"] == username:
-            rooms[room_code]["player2"] = ""
+        if rooms[room_code]["player2"]["username"] == username:
+            rooms[room_code]["player2"]["username"] = ""
+            rooms[room_code]["player2"]["clientID"] = ""
         else:
-            rooms[room_code]["player1"] = rooms[room_code]["player2"]
-            rooms[room_code]["player2"] = ""
+            rooms[room_code]["player1"]["username"] = rooms[room_code]["player2"]["username"]
+            rooms[room_code]["player1"]["clientID"] = rooms[room_code]["player2"]["clientID"]
+            rooms[room_code]["player2"]["username"] = ""
+            rooms[room_code]["player2"]["clientID"] = ""
 
         send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
         print(f"{username} has left the room {room_code}")
 
-@socketio.on("message")
+@socketio.on("game")
 def message(data):
     username, room_code = session.get('username'), session.get('room_code')
     if room_code not in rooms:
         return
     if data['data'] == "start":
         print("Starting game!")
-        startGame()
+        startGame(room_code)
     else:
         sendPlayOfGame(data)
 
 def sendPlayOfGame(data):
     username, room_code = session.get('username'), session.get('room_code')
-    moveMadeBy = ""
-    if rooms[room_code]["player1"] == username:
+    if rooms[room_code]["player1"]["username"] == username:
         moveMadeBy = "White"
     else:
         moveMadeBy = "Black"
-    send({moveMadeBy: moveMadeBy, source: data["source"], destination: data["destination"]}, to=room_code)
+    emit("play", {"moveMadeBy": moveMadeBy, "source": data["source"], "destination": data["destination"]}, to=room_code)
     rooms[room_code]["allMoves"] += [ moveMadeBy, data["source"], data["destination"] ]
-    print(f"Latest move by {username}'s ({moveMadeBy}) is piece from {data['source']} moved to piece at {data['dest']}")
-
-def startGame():
+    print(f"Latest move by {username}'s ({moveMadeBy}) is piece from {data['source']} moved to piece at {data['destination']}")
 
 
+def startGame(room_code):
+    emit("start", {"message": "start", "color": "White"}, to=rooms[room_code]["player1"]["clientID"])
+    emit("start", {"message": "start", "color": "Black"}, to=rooms[room_code]["player2"]["clientID"])
 
 
 # Run the flask server

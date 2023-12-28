@@ -10,7 +10,7 @@
     ></script>
     <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
     
-    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
   </head>
   <body>
     <div id="waiting-room">
@@ -23,8 +23,10 @@
 
     <div class="board">
     </div>
-    <script src="../scripts/script.js"></script>
+    <script src="{{url_for('static', filename='script.js')}}" defer></script>
     <script type="text/javascript">
+      let color;
+
       var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
       const waitingRoom=document.getElementById("waiting-room");
       const messages = document.getElementById("messages");
@@ -40,23 +42,25 @@
             </span>
         </div>`;
         playerCount.innerHTML = `Current player count: ${data.playerCount}`;
-        let playerNamesMsg = `Usernames of the players in this room: ${data.player1}`;
-        if(data.player2 !== "") playerNamesMsg += ` and ${data.player2}`;
+        let playerNamesMsg = `Usernames of the players in this room: ${data.player1.username}`;
+        if(data.player2.username !== "") playerNamesMsg += ` and ${data.player2.username}`;
         playerNames.innerHTML = playerNamesMsg;
       });
 
       startGameButton.addEventListener("click",()=>{
-          waitingRoom.style.display="none";
-          createBoard();
           sendMessage("start");
         });
-      // startGameButton.onclick(
-        
-      //   );
+
+      socketio.on("start", (data) =>{
+        color = data.color;
+        console.log(data.color)
+        waitingRoom.style.display="none";
+        createBoard();
+      })
 
       function sendMessage(message){
         if (message === "") return;
-        socketio.emit("message", {data: message});  // EMIT AN EVENT CALLED "message" FROM CLIENT WHICH WE CAN LISTEN TO ON OUR SERVER.
+        socketio.emit("game", {data: message});  // EMIT AN EVENT CALLED "game" FROM CLIENT WHICH WE CAN LISTEN TO ON OUR SERVER.
       }
     </script>
   </body>

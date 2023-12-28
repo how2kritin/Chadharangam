@@ -1,3 +1,5 @@
+Initial idea:
+
 Basic backend design:
 1. First, define a game instance, associated with 2 players. Maybe for now, create "rooms" perhaps?
 2. Keep track of whether the player chose white or black.
@@ -34,10 +36,17 @@ Tables I can use:
 
 =====================================================================================================================================================================
 
-NOTE:
+Latest:
+
+
+To-Do:
+ENCRYPT PASSWORDS!
 LOOK AT THE FIRST LINE BELOW auth() TO CLEAR SESSION! DO THAT AFTER YOU IMPLEMENT PROPER LOGOUT.
 Prevent the same user from being in the same room twice or two different rooms at once.
 Refreshing page should retain state of game as is. Implement this also (just send the state of the game when page is refreshed ig?)
 Later, maybe consider cases where the player might leave in the middle of a game being loaded or something?
+Victory tracking
+Page refresh when chessboard is displayed
+Timeout when player leaves perhaps
 
 ---------------------> For now, I'm going make player1 in the room White and player2 in the room Black. <---------------------
