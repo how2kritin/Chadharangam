@@ -6,8 +6,9 @@
 2. Now, activate this virtual environment using ```source .venv/bin/activate``` for Bash.  
 
 ### For Windows:
-1. First, create a virtual environment for python using ```python -m venv .venv``` in your current directory.  
-2. Now, activate this virtual environment by typing ```.venv\Scripts\activate```.  
+1. First, install the latest version of Python 3 (Python 3.xx) from the Microsoft Store (or, install it in your preferable method.)    
+2. Next, create a virtual environment for python using ```python -m venv .venv``` in your current directory.  
+3. Now, activate this virtual environment by typing ```.venv\Scripts\activate```.  
 
 ### Continue with these:
 3. Now, install the required libraries by running ```pip install -r requirements.txt``` while in the virtual environment.  

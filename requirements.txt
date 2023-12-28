@@ -1,3 +1,4 @@
+bidict==0.22.1
 blinker==1.7.0
 cachelib==0.10.2
 certifi==2023.11.17
@@ -9,6 +10,8 @@ cryptography==41.0.7
 Flask==3.0.0
 Flask-Cors==4.0.0
 Flask-Session==0.5.0
+Flask-SocketIO==5.3.6
+h11==0.14.0
 idna==3.6
 itsdangerous==2.1.2
 Jinja2==3.1.2
@@ -19,7 +22,11 @@ pyasn1==0.5.1
 pycparser==2.21
 PyNaCl==1.5.0
 pyOpenSSL==23.3.0
+python-engineio==4.8.0
+python-socketio==5.10.0
 requests==2.31.0
+simple-websocket==1.0.0
 six==1.16.0
 urllib3==2.1.0
 Werkzeug==3.0.1
+wsproto==1.2.0
