@@ -9,16 +9,24 @@
       crossorigin="anonymous"
     ></script>
     <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
+    
+    <link rel="stylesheet" href="../styles/style.css">
   </head>
   <body>
-    <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
-    <h2 id="playerCount"></h2>
-    <h3 id="playerNames"></h3>
-    <button id="startGame">Start Game</button>
-    <div id="messages"></div>
+    <div id="waiting-room">
+      <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
+      <h2 id="playerCount"></h2>
+      <h3 id="playerNames"></h3>
+      <button id="startGame">Start Game</button>
+      <div id="messages"></div>
+    </div>
+
+    <div class="board">
+    </div>
+    <script src="../scripts/script.js"></script>
     <script type="text/javascript">
       var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
-
+      const waitingRoom=document.getElementById("waiting-room");
       const messages = document.getElementById("messages");
       const playerCount = document.getElementById("playerCount");
       const playerNames = document.getElementById("playerNames");
@@ -37,7 +45,14 @@
         playerNames.innerHTML = playerNamesMsg;
       });
 
-      startGameButton.onclick(sendMessage("start"))
+      startGameButton.addEventListener("click",()=>{
+          waitingRoom.style.display="none";
+          createBoard();
+          sendMessage("start");
+        });
+      // startGameButton.onclick(
+        
+      //   );
 
       function sendMessage(message){
         if (message === "") return;

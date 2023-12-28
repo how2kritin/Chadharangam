@@ -42,6 +42,33 @@ function intToPngName(piece) {
   }
   return name;
 }
+
+function createBoard(){
+  //making board and storing references in squares 2d array
+  for (let i = 0; i < 8; i++) {
+    let row = [];
+    for (let j = 0; j < 8; j++) {
+      row.push(document.createElement("div"));
+      if ((i + j) % 2 == 0) {
+        row[j].classList.add("white");
+      } else {
+        row[j].classList.add("black");
+      }
+      boardHtml.appendChild(row[j]);
+    }
+    squares.push(row);
+  }
+  //adding pieces
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      squares[i][j].addEventListener("click", sqrClickedListener);
+      if (board[i][j]) {
+        addImgToSqr(squares[i][j], board[i][j]);
+      }
+    }
+  }
+}
+
 //function that takes a square(div) as input and returns position in the board (int)
 function findSqr(div_ref) {
   for (let i = 0; i < 8; i++) {
@@ -50,35 +77,14 @@ function findSqr(div_ref) {
     }
   }
 }
-//making board and storing references in squares 2d array
-for (let i = 0; i < 8; i++) {
-  let row = [];
-  for (let j = 0; j < 8; j++) {
-    row.push(document.createElement("div"));
-    if ((i + j) % 2 == 0 && white_pov) {
-      row[j].classList.add("white");
-    } else {
-      row[j].classList.add("black");
-    }
-    boardHtml.appendChild(row[j]);
-  }
-  squares.push(row);
-}
+
 function addImgToSqr(square, piece) {
   let img = document.createElement("img");
   img.classList.add("piece");
   img.src = "../static/" + intToPngName(piece) + ".png";
   square.appendChild(img);
 }
-//adding pieces
-for (let i = 0; i < 8; i++) {
-  for (let j = 0; j < 8; j++) {
-    squares[i][j].addEventListener("click", sqrClickedListener);
-    if (board[i][j]) {
-      addImgToSqr(squares[i][j], board[i][j]);
-    }
-  }
-}
+
 function isLegal(destSqr) {
   for (let i = 0; i < legalMoves.length; i++) {
     if (legalMoves[i][0] == destSqr[0] && legalMoves[i][1] == destSqr[1])
