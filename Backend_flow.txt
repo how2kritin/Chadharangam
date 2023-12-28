@@ -30,3 +30,14 @@ To-do (apart from the initial to-do I made a week ago):
 Tables I can use:
 1. Users and their stats - username, password (after some sort of encryption), wins, losses, draws
 2. Current Game Instances - room_name, player1_username, player2_username, state of game (TBD)
+
+
+=====================================================================================================================================================================
+
+NOTE:
+LOOK AT THE FIRST LINE BELOW auth() TO CLEAR SESSION! DO THAT AFTER YOU IMPLEMENT PROPER LOGOUT.
+Prevent the same user from being in the same room twice or two different rooms at once.
+Refreshing page should retain state of game as is. Implement this also (just send the state of the game when page is refreshed ig?)
+Later, maybe consider cases where the player might leave in the middle of a game being loaded or something?
+
+---------------------> For now, I'm going make player1 in the room White and player2 in the room Black. <---------------------
