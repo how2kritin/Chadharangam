@@ -56,7 +56,7 @@ def handleUser():
         room_code = generate_slug()
         while room_code in rooms:
             room_code = generate_slug()
-        rooms[room_code] = {"members": 0, "currentState": [], "player1": "", "player2": ""}
+        rooms[room_code] = {"members": 0, "allMoves": [], "player1": "", "player2": ""}
 
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
@@ -136,16 +136,26 @@ def message(data):
     username, room_code = session.get('username'), session.get('room_code')
     if room_code not in rooms:
         return
+    if data['data'] == "start":
+        print("Starting game!")
+        startGame()
+    else:
+        sendPlayOfGame(data)
 
-    content = {
-        "name": username,
-        "message": data["data"]
-    }
+def sendPlayOfGame(data):
+    username, room_code = session.get('username'), session.get('room_code')
+    moveMadeBy = ""
+    if rooms[room_code]["player1"] == username:
+        moveMadeBy = "White"
+    else:
+        moveMadeBy = "Black"
+    send({moveMadeBy: moveMadeBy, source: data["source"], destination: data["destination"]}, to=room_code)
+    rooms[room_code]["allMoves"] += [ moveMadeBy, data["source"], data["destination"] ]
+    print(f"Latest move by {username}'s ({moveMadeBy}) is piece from {data['source']} moved to piece at {data['dest']}")
 
-    send(content, to=room_code)
-    rooms[room_code]["currentState"] = data["data"]
+def startGame():
 
-    print(f"Current state of the game after {username}'s play is {data['data']}")
+
 
 
 # Run the flask server

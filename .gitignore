@@ -3,3 +3,5 @@
 Databases
 flask_session
 testing
+node_modules
+.venv

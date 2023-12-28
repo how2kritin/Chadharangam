@@ -14,6 +14,7 @@
     <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
     <h2 id="playerCount"></h2>
     <h3 id="playerNames"></h3>
+    <button id="startGame">Start Game</button>
     <div id="messages"></div>
     <script type="text/javascript">
       var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
@@ -21,6 +22,8 @@
       const messages = document.getElementById("messages");
       const playerCount = document.getElementById("playerCount");
       const playerNames = document.getElementById("playerNames");
+      const startGameButton = document.getElementById("startGame")
+
       socketio.on("message", (data) => {
         messages.innerHTML += `
         <div id="messages" class="text">
@@ -34,11 +37,11 @@
         playerNames.innerHTML = playerNamesMsg;
       });
 
-      function sendMessage(){
-        const message = document.getElementById("messages");
-        if (message.value === "") return;
-        socketio.emit("message", {data: message.value});  // EMIT AN EVENT CALLED "message" FROM CLIENT WHICH WE CAN LISTEN TO ON OUR SERVER.
-        message.value = "";
+      startGameButton.onclick(sendMessage("start"))
+
+      function sendMessage(message){
+        if (message === "") return;
+        socketio.emit("message", {data: message});  // EMIT AN EVENT CALLED "message" FROM CLIENT WHICH WE CAN LISTEN TO ON OUR SERVER.
       }
     </script>
   </body>

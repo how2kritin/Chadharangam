@@ -150,8 +150,8 @@ function sqrClickedListener(event) {
   } else {
     sourceSqr = findSqr(this);
     if (
-      (board[sourceSqr[0]][sourceSqr[1]] > 0 && white_move) ||
-      (board[sourceSqr[0]][sourceSqr[1]] < 0 && !white_move)
+      (board[sourceSqr[0]][sourceSqr[1]] > 0 && white_move && white_pov) ||
+      (board[sourceSqr[0]][sourceSqr[1]] < 0 && !white_move && !white_pov)
     ) {
       clickedSqr = true;
       castlingPossible = false;
@@ -488,3 +488,21 @@ function gameOver() {
   result_div.textContent = result;
   body.appendChild(result_div);
 }
+
+function makeAMove(opponents_move) {
+      try{
+        console.log(opponents_move);
+        //update the move
+        let S=opponents_move[0],D=opponents_move[1];
+        board[D[0]][D[1]]=board[S[0]][S[1]];
+        board[S[0]][S[1]]=0;
+        squares[S[0]][S[1]].innerHTML="";
+        squares[D[0]][D[1]].innerHTML="";
+        addImgToSqr(squares[D[0]][D[1]],board[D[0]][D[1]]);
+        white_move=!white_move;
+    }catch(error){
+        console.log(error);
+    }
+}
+
+// Call makeAMove function after receiving response from server, only if it is this player's turn to move.
