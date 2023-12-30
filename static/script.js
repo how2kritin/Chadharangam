@@ -28,8 +28,6 @@ let board = [
   [1, 1, 1, 1, 1, 1, 1, 1],
   [5, 2, 3, 9, 7, 3, 2, 5],
 ];
-let test = document.querySelector("#test");
-let piece_selected, sqr_selected, sqr_released;
 //function that takes piece value as input and returns its name corresponding to its png
 
 function intToPngName(piece) {
@@ -44,13 +42,13 @@ function intToPngName(piece) {
   return name;
 }
 
-function createBoard(){
+function createBoard() {
   //making board and storing references in squares 2d array
   for (let i = 0; i < 8; i++) {
     let row = [];
     for (let j = 0; j < 8; j++) {
       row.push(document.createElement("div"));
-      if ((i + j) % 2 == 0) {
+      if ((i + j) % 2 === 0) {
         row[j].classList.add("white");
       } else {
         row[j].classList.add("black");
@@ -70,7 +68,7 @@ function createBoard(){
   }
 
   // For black, rotate POV.
-  if(color === "Black") {
+  if (color === "Black") {
     white_pov = false;
     black_pov();
   }
@@ -80,7 +78,7 @@ function createBoard(){
 function findSqr(div_ref) {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-      if (squares[i][j] == div_ref) return [i, j];
+      if (squares[i][j] === div_ref) return [i, j];
     }
   }
 }
@@ -92,107 +90,128 @@ function addImgToSqr(square, piece) {
   square.appendChild(img);
 }
 
-function black_pov(){
-    //if black pov
-    if(!white_pov){
-        document.querySelector(".board").style.rotate="180deg";
-        for(let i in squares){
-            for(let j in squares){
-                squares[i][j].style.rotate="180deg";
-            }
-        }
+function black_pov() {
+  //if black pov
+  if (!white_pov) {
+    document.querySelector(".board").style.rotate = "180deg";
+    for (let i in squares) {
+      for (let j in squares) {
+        squares[i][j].style.rotate = "180deg";
+      }
     }
+  }
 }
 
 function isLegal(destSqr) {
   for (let i = 0; i < legalMoves.length; i++) {
-    if (legalMoves[i][0] == destSqr[0] && legalMoves[i][1] == destSqr[1])
+    if (legalMoves[i][0] === destSqr[0] && legalMoves[i][1] === destSqr[1])
       return true;
   }
   return false;
 }
 //function when a square is clicked
-function sqrClickedListener(event){
-    if(clickedSqr){
-        destinationSqr=findSqr(this);
-        if(isLegal(destinationSqr)){
-            //finding coords of destination sqri
-            //updating castling variables
-            {
-                if(sourceSqr[0]==0&&sourceSqr[1]==0) bQRookMoved=true;
-                else if(sourceSqr[0]==0&&sourceSqr[1]==7) bKRookMoved=true;
-                else if(sourceSqr[0]==7&&sourceSqr[1]==7) wKRookMoved=true;
-                else if(sourceSqr[0]==7&&sourceSqr[1]==0) wQRookMoved=true;
-                else if(sourceSqr[0]==0&&sourceSqr[1]==4) bKingMoved=true;
-                else if(sourceSqr[0]==7&&sourceSqr[1]==4) wKingMoved=true;
-            }
-            //clearing any piece in destination sqr and source sqr also
-            squares[sourceSqr[0]][sourceSqr[1]].innerHTML="";
-            squares[destinationSqr[0]][destinationSqr[1]].innerHTML="";
-            //putting the piece in destination sqr and emptying source sqr
-            board[destinationSqr[0]][destinationSqr[1]]=board[sourceSqr[0]][sourceSqr[1]];
-            //if moved piece is a pawn, and if it reached 0th row or 7th row then put a queen there
-            if(board[sourceSqr[0]][sourceSqr[1]]==1||board[sourceSqr[0]][sourceSqr[1]]==-1){
-                if(destinationSqr[0]==0) board[destinationSqr[0]][destinationSqr[1]]=9;
-                else if(destinationSqr[0]==7) board[destinationSqr[0]][destinationSqr[1]]=-9;
-            }
-            board[sourceSqr[0]][sourceSqr[1]]=0;
-            //adding piece to final sqr
-            addImgToSqr(squares[destinationSqr[0]][destinationSqr[1]],board[destinationSqr[0]][destinationSqr[1]]);
-            //if castling is enabled and destination sqrs col is either 2 or 6, then put the rook at the correct position
-            //also selected piece has to be king
-            if(board[destinationSqr[0]][destinationSqr[1]]==10||board[destinationSqr[0]][destinationSqr[1]]==-10){
-                if(castlingPossible&&destinationSqr[1]==2){
-                    board[sourceSqr[0]][3]=board[sourceSqr[0]][0];
-                    board[sourceSqr[0]][0]=0;
-                    addImgToSqr(squares[sourceSqr[0]][3],board[sourceSqr[0]][3]);
-                    squares[sourceSqr[0]][0].innerHTML="";
-                }
-                else if(castlingPossible&&destinationSqr[1]==6){
-                    board[sourceSqr[0]][5]=board[sourceSqr[0]][7];
-                    board[sourceSqr[0]][7]=0;
-                    addImgToSqr(squares[sourceSqr[0]][5],board[sourceSqr[0]][5]);
-                    squares[sourceSqr[0]][7].innerHTML="";
-                }
-            }
-            //send your move to the server
-          socketio.emit("game", {"data": "", "source": sourceSqr, "destination": destinationSqr});
-            //if enpassant is possible
-            if(enPassant!=-1&&destinationSqr[1]==enPassant){
-                board[sourceSqr[0]][enPassant]=0;
-                squares[sourceSqr[0]][enPassant].innerHTML="";
-            }
-            // if(destinationSqr[1]==8)
-            //updating moves
-            moves.push([sourceSqr,destinationSqr]);
-            nmoves++;
-            //give the chance to other player
-            white_move=!white_move;
+function sqrClickedListener() {
+  if (clickedSqr) {
+    destinationSqr = findSqr(this);
+    if (isLegal(destinationSqr)) {
+      //finding coords of destination sqri
+      //updating castling variables
+      {
+        if (sourceSqr[0] === 0 && sourceSqr[1] === 0) bQRookMoved = true;
+        else if (sourceSqr[0] === 0 && sourceSqr[1] === 7) bKRookMoved = true;
+        else if (sourceSqr[0] === 7 && sourceSqr[1] === 7) wKRookMoved = true;
+        else if (sourceSqr[0] === 7 && sourceSqr[1] === 0) wQRookMoved = true;
+        else if (sourceSqr[0] === 0 && sourceSqr[1] === 4) bKingMoved = true;
+        else if (sourceSqr[0] === 7 && sourceSqr[1] === 4) wKingMoved = true;
+      }
+      //clearing any piece in destination sqr and source sqr also
+      squares[sourceSqr[0]][sourceSqr[1]].innerHTML = "";
+      squares[destinationSqr[0]][destinationSqr[1]].innerHTML = "";
+      //putting the piece in destination sqr and emptying source sqr
+      board[destinationSqr[0]][destinationSqr[1]] =
+        board[sourceSqr[0]][sourceSqr[1]];
+      //if moved piece is a pawn, and if it reached 0th row or 7th row then put a queen there
+      if (
+        board[sourceSqr[0]][sourceSqr[1]] === 1 ||
+        board[sourceSqr[0]][sourceSqr[1]] === -1
+      ) {
+        if (destinationSqr[0] === 0)
+          board[destinationSqr[0]][destinationSqr[1]] = 9;
+        else if (destinationSqr[0] === 7)
+          board[destinationSqr[0]][destinationSqr[1]] = -9;
+      }
+      board[sourceSqr[0]][sourceSqr[1]] = 0;
+      //adding piece to final sqr
+      addImgToSqr(
+        squares[destinationSqr[0]][destinationSqr[1]],
+        board[destinationSqr[0]][destinationSqr[1]],
+      );
+      //if castling is enabled and destination sqrs col is either 2 or 6, then put the rook at the correct position
+      //also selected piece has to be king
+      if (
+        board[destinationSqr[0]][destinationSqr[1]] === 10 ||
+        board[destinationSqr[0]][destinationSqr[1]] === -10
+      ) {
+        if (castlingPossible && destinationSqr[1] === 2) {
+          board[sourceSqr[0]][3] = board[sourceSqr[0]][0];
+          board[sourceSqr[0]][0] = 0;
+          addImgToSqr(squares[sourceSqr[0]][3], board[sourceSqr[0]][3]);
+          squares[sourceSqr[0]][0].innerHTML = "";
+        } else if (castlingPossible && destinationSqr[1] === 6) {
+          board[sourceSqr[0]][5] = board[sourceSqr[0]][7];
+          board[sourceSqr[0]][7] = 0;
+          addImgToSqr(squares[sourceSqr[0]][5], board[sourceSqr[0]][5]);
+          squares[sourceSqr[0]][7].innerHTML = "";
         }
-        squares[sourceSqr[0]][sourceSqr[1]].classList.remove("pieceSelected");
-        destinationSqr=[-1,-1];
-        sourceSqr=[-1,-1];
-        //clearing hightlighted squares
-        highlightSqrs(false);
-        clickedSqr=false;
-        if(isGameOver()) gameOver();
-    }else{
-        sourceSqr=findSqr(this);
-        if((board[sourceSqr[0]][sourceSqr[1]]>0&&white_move&&white_pov)||((board[sourceSqr[0]][sourceSqr[1]]<0&&!white_move&&!white_pov))){
-            clickedSqr=true;
-            castlingPossible=false;
-            enPassant=-1;
-            legalMoves=legalMovesFinder(sourceSqr,board[sourceSqr[0]][sourceSqr[1]]);
-            squares[sourceSqr[0]][sourceSqr[1]].classList.add("pieceSelected");
-            highlightSqrs(true);
-        }else{
-            sourceSqr=[-1,-1];
-            clickedSqr=false;
-        }
+      }
+      //send your move to the server
+      socketio.emit("game", {
+        data: "",
+        source: sourceSqr,
+        destination: destinationSqr,
+      });
+      //if enpassant is possible
+      if (enPassant !== -1 && destinationSqr[1] === enPassant) {
+        board[sourceSqr[0]][enPassant] = 0;
+        squares[sourceSqr[0]][enPassant].innerHTML = "";
+      }
+      // if(destinationSqr[1]==8)
+      //updating moves
+      moves.push([sourceSqr, destinationSqr]);
+      nmoves++;
+      //give the chance to other player
+      white_move = !white_move;
     }
+    squares[sourceSqr[0]][sourceSqr[1]].classList.remove("pieceSelected");
+    destinationSqr = [-1, -1];
+    sourceSqr = [-1, -1];
+    //clearing hightlighted squares
+    highlightSqrs(false);
+    clickedSqr = false;
+    if (isGameOver()) gameOver();
+  } else {
+    sourceSqr = findSqr(this);
+    if (
+      (board[sourceSqr[0]][sourceSqr[1]] > 0 && white_move && white_pov) ||
+      (board[sourceSqr[0]][sourceSqr[1]] < 0 && !white_move && !white_pov)
+    ) {
+      clickedSqr = true;
+      castlingPossible = false;
+      enPassant = -1;
+      legalMoves = legalMovesFinder(
+        sourceSqr,
+        board[sourceSqr[0]][sourceSqr[1]],
+      );
+      squares[sourceSqr[0]][sourceSqr[1]].classList.add("pieceSelected");
+      highlightSqrs(true);
+    } else {
+      sourceSqr = [-1, -1];
+      clickedSqr = false;
+    }
+  }
 }
 
-function highlightSqrs(yes) {
+function highlightSqrs() {
   for (let i = 0; i < legalMoves.length; i++) {
     // squares[legalMoves[i][0]][legalMoves[i][1]].style.border=(yes)?"2px solid black":"";
     squares[legalMoves[i][0]][legalMoves[i][1]].classList.toggle("selected");
@@ -205,7 +224,7 @@ function isInCheck(white) {
   let r, c;
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
-      if ((white && board[i][j] == 7) || (!white && board[i][j] == -7)) {
+      if ((white && board[i][j] === 7) || (!white && board[i][j] === -7)) {
         r = i;
         c = j;
       }
@@ -222,7 +241,7 @@ function isInCheck(white) {
     console.log(attackingSpots);
     for (let j = 0; j < attackingSpots.length; j++) {
       if (
-        board[attackingSpots[j][0]][attackingSpots[j][1]] ==
+        board[attackingSpots[j][0]][attackingSpots[j][1]] ===
         (!white ? attackingPieces[i] : 0 - attackingPieces[i])
       ) {
         console.log(attackingPieces[i]);
@@ -237,7 +256,7 @@ function isInCheck(white) {
 function movesFinder(position, piece) {
   let possibleMoves = [];
   //possible moves if it is a pawn
-  if (piece == 1 || piece == -1) {
+  if (piece === 1 || piece === -1) {
     //if white, row-- or if black,row++
     let r = position[0] - piece,
       c = position[1];
@@ -260,32 +279,33 @@ function movesFinder(position, piece) {
       console.log("can capture");
     }
     //if pawn is on 2nd rank or 7th rank, you can have 2 moves
-    if (position[0] == 1 || position[0] == 6) {
-      (r = position[0] - 2 * piece), (c = position[1]);
+    if (position[0] === 1 || position[0] === 6) {
+      r = position[0] - 2 * piece;
+      c = position[1];
       if (!board[r][c] && !board[r + piece][c]) possibleMoves.push([r, c]);
     }
     //and the most important move.. en passant
     r = position[0];
     c = position[1];
-    //if latest move is made by a pawn, and the pawn has made 2 moves for its first move and the pawn is adjacent to the selected pawn,, en passant is possible
-    if (white_move && nmoves > 0 && r == 3) {
-      if (board[moves[nmoves - 1][1][0]][moves[nmoves - 1][1][1]] == -1) {
-        if (moves[nmoves - 1][1][0] - moves[nmoves - 1][0][0] == 2) {
+    //if latest move is made by a pawn, and the pawn has made 2 moves for its first move and the pawn is adjacent to the selected pawn, en passant is possible
+    if (white_move && nmoves > 0 && r === 3) {
+      if (board[moves[nmoves - 1][1][0]][moves[nmoves - 1][1][1]] === -1) {
+        if (moves[nmoves - 1][1][0] - moves[nmoves - 1][0][0] === 2) {
           let t = moves[nmoves - 1][1][1];
           t -= c;
-          if (t == 1 || t == -1) {
+          if (t === 1 || t === -1) {
             possibleMoves.push([r - 1, c + t]);
             enPassant = c + t;
           }
         }
       }
     }
-    if (!white_move && r == 4) {
-      if (board[moves[nmoves - 1][1][0]][moves[nmoves - 1][1][1]] == 1) {
-        if (moves[nmoves - 1][1][0] - moves[nmoves - 1][0][0] == -2) {
+    if (!white_move && r === 4) {
+      if (board[moves[nmoves - 1][1][0]][moves[nmoves - 1][1][1]] === 1) {
+        if (moves[nmoves - 1][1][0] - moves[nmoves - 1][0][0] === -2) {
           let t = moves[nmoves - 1][1][1];
           t -= c;
-          if (t == 1 || t == -1) {
+          if (t === 1 || t === -1) {
             possibleMoves.push([r + 1, c + t]);
             enPassant = c + t;
           }
@@ -294,7 +314,7 @@ function movesFinder(position, piece) {
     }
   }
   //possible moves if it is a rook (or a queen)
-  if (piece == 5 || piece == -5 || piece == 9 || piece == -9) {
+  if (piece === 5 || piece === -5 || piece === 9 || piece === -9) {
     let r = position[0],
       c = position[1];
     //going right
@@ -340,7 +360,7 @@ function movesFinder(position, piece) {
     }
   }
   //possible moves if it is a bishop (or a queen)
-  if (piece == 3 || piece == -3 || piece == 9 || piece == -9) {
+  if (piece === 3 || piece === -3 || piece === 9 || piece === -9) {
     let r = position[0],
       c = position[1];
     //going up-right
@@ -395,12 +415,12 @@ function movesFinder(position, piece) {
     }
   }
   //possible moves if its a knight
-  if (piece == 2 || piece == -2) {
+  if (piece === 2 || piece === -2) {
     let r = position[0],
       c = position[1];
     for (let i = -2; i <= 2; i++) {
       for (let j = -2; j <= 2; j++) {
-        if (i && j && i != j && i != 0 - j) {
+        if (i && j && i !== j && i !== 0 - j) {
           if (r + i >= 0 && r + i < 8 && c + j >= 0 && c + j < 8) {
             if (
               (board[r + i][c + j] <= 0 && piece > 0) ||
@@ -413,12 +433,12 @@ function movesFinder(position, piece) {
     }
   }
   //possible moves if its a king
-  if (piece == 7 || piece == -7) {
+  if (piece === 7 || piece === -7) {
     let r = position[0],
       c = position[1];
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
-        //if atleast i or j are non zeroes, then king can go there
+        //if at least i or j are non zeroes, then king can go there
         if ((i || j) && r + i >= 0 && r + i < 8 && c + j >= 0 && c + j < 8) {
           if (
             (board[r + i][c + j] >= 0 && piece < 0) ||
@@ -476,7 +496,7 @@ function legalMovesFinder(position, piece) {
     board[allPossibleMoves[i][0]][allPossibleMoves[i][1]] =
       board[position[0]][position[1]];
     board[position[0]][position[1]] = 0;
-    //if your king in check, dont add it to legalMoves
+    //if your king in check, don't add it to legalMoves
     //if your king is not in check, add it
     if ((white_move && !isInCheck(true)) || (!white_move && !isInCheck(false)))
       allLegalMoves.push(allPossibleMoves[i]);
@@ -492,7 +512,7 @@ function isGameOver() {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       if ((white_move && board[i][j] > 0) || (!white_move && board[i][j] < 0)) {
-        if (legalMovesFinder([i, j], board[i][j]).length != 0) return false;
+        if (legalMovesFinder([i, j], board[i][j]).length !== 0) return false;
       }
     }
   }
@@ -512,22 +532,23 @@ function gameOver() {
 }
 
 function makeAMove(opponents_move) {
-      try{
-        console.log(opponents_move);
-        //update the move
-        let S=opponents_move[0],D=opponents_move[1];
-        board[D[0]][D[1]]=board[S[0]][S[1]];
-        board[S[0]][S[1]]=0;
-        squares[S[0]][S[1]].innerHTML="";
-        squares[D[0]][D[1]].innerHTML="";
-        addImgToSqr(squares[D[0]][D[1]],board[D[0]][D[1]]);
-        white_move=!white_move;
-    }catch(error){
-        console.log(error);
-    }
+  try {
+    console.log(opponents_move);
+    //update the move
+    let S = opponents_move[0],
+      D = opponents_move[1];
+    board[D[0]][D[1]] = board[S[0]][S[1]];
+    board[S[0]][S[1]] = 0;
+    squares[S[0]][S[1]].innerHTML = "";
+    squares[D[0]][D[1]].innerHTML = "";
+    addImgToSqr(squares[D[0]][D[1]], board[D[0]][D[1]]);
+    white_move = !white_move;
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 // Call makeAMove function after receiving response from server, only if it is this player's turn to move.
-socketio.on("play", (data) =>{
-  if(color !== data.moveMadeBy) makeAMove([data.source, data.destination]);
-})
+socketio.on("play", (data) => {
+  if (color !== data.moveMadeBy) makeAMove([data.source, data.destination]);
+});
