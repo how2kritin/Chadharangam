@@ -40,12 +40,10 @@ Latest:
 
 To-Do:
 ENCRYPT PASSWORDS!
-LOOK AT THE FIRST LINE BELOW auth() TO CLEAR SESSION! DO THAT AFTER YOU IMPLEMENT PROPER LOGOUT.
 Prevent the same user from being in the same room twice or two different rooms at once.
-Refreshing page should retain state of game as is. Implement this also (just send the state of the game when page is refreshed ig?)
 Later, maybe consider cases where the player might leave in the middle of a game being loaded or something?
 Victory tracking
-Page refresh when chessboard is displayed
-Timeout when player leaves perhaps
+Implement a timer for when a player leaves after a game has started, and shut down the room and award the remaining player the victory?
+Maybe, when player logs out and logs back into the same room, automatically refresh the page? Either this, or make the button say "Continue" instead of "Start Game" at this point.
 
----------------------> For now, I'm going make player1 in the room White and player2 in the room Black. <---------------------
+---------------------> For now, I'm going make player1 in the room play White and player2 in the room play Black. <---------------------

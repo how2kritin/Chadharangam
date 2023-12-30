@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Waiting for players...</title>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+      integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+      crossorigin="anonymous"
+    ></script>
+    <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
+
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" />
+  </head>
+  <body>
+  <div id="waiting-room">
+    <dialog id="failedToStartGame">
+      <h1 id="failureMessage"></h1>
+      <form method="dialog"><button>Ok</button></form>
+    </dialog>
+    <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
+      <h2 id="playerCount"></h2>
+      <h3 id="playerNames"></h3>
+      <button id="startGame">Start Game</button>
+      <div id="messages"></div>
+  </div>
+
+  <form method="post"><button id="logout" value="logout">Log out</button></form> <!-- Common to both divs -->
+
+  <div class="board"></div>
+    <script src="{{url_for('static', filename='script.js')}}" defer></script>
+    <script type="text/javascript">
+      let color;
+
+      var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
+      const waitingRoom = document.getElementById("waiting-room");
+      const messages = document.getElementById("messages");
+      const playerCount = document.getElementById("playerCount");
+      const playerNames = document.getElementById("playerNames");
+      const startGameButton = document.getElementById("startGame");
+      // const logOutButton = document.getElementById("logout");
+      const failedToStartGameModal = document.getElementById("failedToStartGame");
+      const failedToStartGameMsg = document.getElementById("failureMessage")
+      let currNumPlayers = 0;
+
+      socketio.on("message", (data) => {
+        messages.innerHTML += `
+        <div id="messages" class="text">
+            <span>
+                <strong>${data.name}</strong> ${data.message}
+            </span>
+        </div>`;
+        playerCount.innerHTML = `Current player count: ${data.playerCount}`;
+        currNumPlayers = parseInt(data.playerCount);
+        let playerNamesMsg = `Usernames of the players in this room: ${data.player1.username}`;
+        if (data.player2.username !== "")
+          playerNamesMsg += ` and ${data.player2.username}`;
+        playerNames.innerHTML = playerNamesMsg;
+      });
+
+      startGameButton.addEventListener("click", () => {
+        if(currNumPlayers < 2){
+          failedToStartGameMsg.innerHTML = `Insufficient players to start the game. You need exactly 2 players. You currently have ${currNumPlayers}.`;
+          failedToStartGameModal.showModal();
+        }
+        else sendMessage("game", "start");
+      });
+
+      // logOutButton.addEventListener("click", () => {
+      //   location.href="{{ url_for('auth') }}"
+      // });
+
+      socketio.on("start", (data) => {
+        color = data.color;
+        console.log(data.color);
+        waitingRoom.style.display = "none";
+        createBoard();
+      });
+
+      function sendMessage(event, message) {
+        if (message === "") return;
+        socketio.emit(event, { data: message }); // EMIT AN EVENT FROM CLIENT WHICH WE CAN LISTEN TO ON OUR SERVER.
+      }
+    </script>
+  </body>
+</html>

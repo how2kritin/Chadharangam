@@ -531,18 +531,21 @@ function gameOver() {
   body.appendChild(result_div);
 }
 
-function makeAMove(opponents_move) {
+function makeAMove(move, restore) {
   try {
-    console.log(opponents_move);
+    console.log(move);
     //update the move
-    let S = opponents_move[0],
-      D = opponents_move[1];
+    let S = move[0], D = move[1];
     board[D[0]][D[1]] = board[S[0]][S[1]];
     board[S[0]][S[1]] = 0;
     squares[S[0]][S[1]].innerHTML = "";
     squares[D[0]][D[1]].innerHTML = "";
     addImgToSqr(squares[D[0]][D[1]], board[D[0]][D[1]]);
-    white_move = !white_move;
+    if(!restore) white_move = !white_move;
+    else{
+      if(move[2] !== color) white_move = (color === "White"); // If the latest move wasn't made by you, then it is your turn to go next.
+      else white_move = (color === "Black"); // Else, it's not your turn right now.
+    }
   } catch (error) {
     console.log(error);
   }
@@ -550,5 +553,10 @@ function makeAMove(opponents_move) {
 
 // Call makeAMove function after receiving response from server, only if it is this player's turn to move.
 socketio.on("play", (data) => {
-  if (color !== data.moveMadeBy) makeAMove([data.source, data.destination]);
+  if (color !== data.moveMadeBy) makeAMove([data.source, data.destination], false);
 });
+
+// Restore state of game upon disconnection and the like.
+socketio.on("restoreState", (data) =>{
+  makeAMove([data.source, data.destination, data.moveMadeBy], true);
+})
