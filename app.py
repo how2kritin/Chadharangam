@@ -80,6 +80,7 @@ def handleUser():
             return redirect("/game")
 
 
+
 @app.route("/game")
 def waitForPlayer():
     username, room_code = session.get('username'), session.get('room_code')
@@ -90,6 +91,7 @@ def waitForPlayer():
         return redirect("/")
 
     return render_template("waitingroom.html", username=username, room_code=room_code)
+
 
 @socketio.on("connect")
 def connect(auth):
@@ -114,6 +116,7 @@ def connect(auth):
     send({"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
     print(f"{username} has joined the room {room_code}")
 
+
 @socketio.on("disconnect")
 def disconnect():
     username, room_code = session.get('username'), session.get('room_code')
@@ -136,6 +139,7 @@ def disconnect():
         send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
         print(f"{username} has left the room {room_code}")
 
+
 @socketio.on("game")
 def message(data):
     username, room_code = session.get('username'), session.get('room_code')
@@ -146,6 +150,7 @@ def message(data):
         startGame(room_code)
     else:
         sendPlayOfGame(data)
+
 
 def sendPlayOfGame(data):
     username, room_code = session.get('username'), session.get('room_code')
