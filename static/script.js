@@ -162,7 +162,7 @@ function highlightSqrs() {
   }
 }
 
-function isInCheck(white) {
+function isWhiteInCheck(white) {
   //if white is true,check if white king is in check and return true if it is indeed in check
   //if white is false,check if black king is in check
   let r, c;
@@ -436,7 +436,7 @@ function legalMovesFinder(position, piece) {
     board[position[0]][position[1]] = 0;
     //if your king in check, don't add it to legalMoves
     //if your king is not in check, add it
-    if ((white_move && !isInCheck(true)) || (!white_move && !isInCheck(false)))
+    if ((white_move && !isWhiteInCheck(true)) || (!white_move && !isWhiteInCheck(false)))
       allLegalMoves.push(allPossibleMoves[i]);
     //redo the move
     board[position[0]][position[1]] =
@@ -459,10 +459,25 @@ function isGameOver() {
 
 function gameOver() {
   over = true;
-  let result;
-  if ((white_move && isInCheck(true)) || (!white_move && isInCheck(false)))
-    result = "CheckMate";
-  else result = "StaleMate";
+  let result, whoWon;
+  if (white_move && isWhiteInCheck(true)) {
+    result = "Checkmate, Black wins!";
+    whoWon = "Black";
+  }
+  else if (!white_move && isWhiteInCheck(false)) {
+    result = "Checkmate, White wins!";
+    whoWon = "White";
+  }
+  else {
+    result = "Stalemate";
+    whoWon = "Draw";
+  }
+
+  socketio.emit("gameOver", {
+    outcome: result,
+    whoWon: whoWon
+  });
+
   let result_div = document.createElement("div");
   result_div.classList.add("result");
   result_div.textContent = result;
@@ -548,10 +563,7 @@ function makeAMove(move, restore) {
       white_move = !white_move;
       if (isGameOver()) gameOver();
     }
-    else{
-      if(move[2] !== color) white_move = (color === "White"); // If the latest move wasn't made by you, then it is your turn to go next.
-      else white_move = (color === "Black"); // Else, it's not your turn right now.
-    }
+    else white_move = (move[2] === "Black")  // Check who made the most recent move, and if it's black, it's white's turn next. Else, it isn't.
   } catch (error) {
     console.log(error);
   }

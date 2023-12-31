@@ -41,7 +41,8 @@
       const startGameButton = document.getElementById("startGame");
       // const logOutButton = document.getElementById("logout");
       const failedToStartGameModal = document.getElementById("failedToStartGame");
-      const failedToStartGameMsg = document.getElementById("failureMessage")
+      const failedToStartGameMsg = document.getElementById("failureMessage");
+      const gameBoard = document.getElementsByClassName("board");
       let currNumPlayers = 0;
 
       socketio.on("message", (data) => {
@@ -79,6 +80,15 @@
         if (message === "") return;
         socketio.emit(event, { data: message }); // EMIT AN EVENT FROM CLIENT WHICH WE CAN LISTEN TO ON OUR SERVER.
       }
+
+      socketio.on("redirect", (destination) => {
+        window.location.href = destination;
+      });
+
+      socketio.on("gameEnded", () => {
+        gameBoard.innerHTML = ``;
+        waitingRoom.style.display = "block";
+      })
     </script>
   </body>
 </html>

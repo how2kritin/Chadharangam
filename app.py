@@ -1,5 +1,4 @@
-from flask import Flask, render_template, redirect, request, session, \
-    flash  # Import Flask and render_template classes from the flask module.
+from flask import Flask, render_template, redirect, request, session, flash, url_for  # Import Flask and render_template classes from the flask module.
 from flask_cors import CORS
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 import sqlite3
@@ -69,7 +68,7 @@ def handleUser():
         while room_code in rooms:
             room_code = generate_random_string(4)
         rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""},
-                            "player2": {"username": "", "clientID": ""}, "inProgress": False}
+                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": ""}
 
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
@@ -234,6 +233,34 @@ def startGame(username, room_code):
         emit("start", {"message": "start", "color": "White"}, to=rooms[room_code]["player1"]["clientID"])
         emit("start", {"message": "start", "color": "Black"}, to=rooms[room_code]["player2"]["clientID"])
         rooms[room_code]["inProgress"] = True
+
+
+@socketio.on("gameOver")
+def gameOver(data):
+    # For the first player that sends this info to the server (both will), store it in the database. Don't store it for the second player.
+    # Close the game div, and reopen the waiting room div.
+    username, room_code = session.get('username'), session.get('room_code')
+    if rooms[room_code]["whoWon"] == "":
+        rooms[room_code]["whoWon"] = data["whoWon"]
+        winner = rooms[room_code]["player1"]["username"] if data["whoWon"] == "White" else rooms[room_code]["player2"]["username"]
+        loser = rooms[room_code]["player1"]["username"] if data["whoWon"] == "Black" else rooms[room_code]["player2"]["username"]
+        outcome = data["outcome"]
+        # Update the SQL database as well.
+        with sqlite3.connect('Databases/users.db') as database:
+            cursor = database.cursor()
+            if outcome != "Stalemate":
+                cursor.execute("UPDATE USERS SET wins = wins + 1 WHERE username = (?);", winner)
+                cursor.execute("UPDATE USERS SET losses = losses + 1 WHERE username = (?);", loser)
+            else:
+                cursor.execute("UPDATE USERS SET draws = draws + 1 WHERE username IN (?, ?)", (rooms[room_code]["player1"]["username"], rooms[room_code]["player2"]["username"]))
+            database.commit()
+            rooms[room_code]["inProgress"] = False  # So that they cannot restart the game as soon as they go to the waiting room. They need to wait for the other player to arrive.
+            # Also helps in the case where the other player disconnects after the game is over, and another person joins the lobby.
+    else:  # If it is the second player sending the same request:
+        rooms[room_code]["whoWon"] = ""
+        rooms[room_code]["allMoves"] = []
+
+    emit("gameEnded", to=request.sid)
 
 
 # Run the flask server
