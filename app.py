@@ -3,7 +3,6 @@ from flask import Flask, render_template, redirect, request, session, \
 from flask_cors import CORS
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 import sqlite3
-from coolname import generate_slug  # to create random room codes
 import os  # to create a directory for the databases, if a directory doesn't exist already.
 import random
 
@@ -27,6 +26,17 @@ CORS(app)
 
 # Miscellaneous global variables
 rooms = dict()
+uppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def generate_random_string(length):
+    while True:
+        code = ""
+        for _ in range(length):
+            code += random.choice(uppercaseLetters)
+        if code not in rooms:
+            break
+    return code
 
 
 # All the routes and their associated functions:
@@ -55,9 +65,9 @@ def handleUser():
     else:
         print(
             f"Username is {username}, password is {password}. Generating a room code. Will use the room code if the username and password are valid.")
-        room_code = generate_slug()
+        room_code = generate_random_string(4)
         while room_code in rooms:
-            room_code = generate_slug()
+            room_code = generate_random_string(4)
         rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""},
                             "player2": {"username": "", "clientID": ""}, "inProgress": False}
 
@@ -118,6 +128,7 @@ def connect():
         leave_room(room_code)
         return
 
+    resumeGame = False
     rooms[room_code]["members"] += 1
     if not rooms[room_code]["inProgress"]:  # If the game hasn't started, do this.
         if rooms[room_code]["members"] == 1:
@@ -127,19 +138,28 @@ def connect():
             rooms[room_code]["player2"]["username"] = username
             rooms[room_code]["player2"]["clientID"] = request.sid
 
-    else:  # Update their SID.
+    else:  # Update their SID, and automatically resume their ongoing game.
         if rooms[room_code]["player1"]["username"] == username:
             rooms[room_code]["player1"]["clientID"] = request.sid
+            color, player, resumeGame = ("White", rooms[room_code]["player1"], True)
         elif rooms[room_code]["player2"]["username"] == username:
             rooms[room_code]["player2"]["clientID"] = request.sid
+            color, player, resumeGame = ("Black", rooms[room_code]["player2"], True)
         else:  # A random player has joined. Reject their connect request.
             print(f"Player with {username} tried to join the room {room_code} which already has a running game. They weren't in the room when the game started. Kicking them out.")
             rooms[room_code]["members"] -= 1
             return
 
-    join_room(room_code) # Join the room only after all checks have passed.
-    send({"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
-    print(f"{username} has joined the room {room_code}")
+    join_room(room_code)  # Join the room only after all checks have passed.
+    if not resumeGame:
+        send({"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
+        print(f"{username} has joined the room {room_code}")
+    else:  # In case you have to resume the game:
+        emit("start", {"message": "start", "color": color}, to=player["clientID"])
+        # Now, restore the game state for them.
+        for move in rooms[room_code]["allMoves"]:
+            emit("restoreState", {"moveMadeBy": move[0], "source": move[1], "destination": move[2]},
+                 to=player["clientID"])
 
 
 @socketio.on("disconnect")
@@ -196,8 +216,7 @@ def startGame(username, room_code):
     # Check if game can be started, and start the game if this is the case.
     if room_code not in rooms:  # if such a room doesn't even exist, just return
         return
-    if rooms[room_code][
-        "inProgress"]:  # if game is already running in this room, then whichever player requested to start the game must be reconnected to it.
+    if rooms[room_code]["inProgress"]:  # if game is already running in this room, but for some reason the connect event failed to detect it, then whichever player requested to start the game must be reconnected to it.
         if username == rooms[room_code]["player1"]["username"]:
             player = rooms[room_code]["player1"]
             color = "White"
@@ -219,4 +238,4 @@ def startGame(username, room_code):
 
 # Run the flask server
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, host="0.0.0.0")

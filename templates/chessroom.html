@@ -18,14 +18,15 @@
       <h1 id="failureMessage"></h1>
       <form method="dialog"><button>Ok</button></form>
     </dialog>
-    <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
       <h2 id="playerCount"></h2>
       <h3 id="playerNames"></h3>
       <button id="startGame">Start Game</button>
       <div id="messages"></div>
   </div>
 
-  <form method="post"><button id="logout" value="logout">Log out</button></form> <!-- Common to both divs -->
+  <!-- Common to both divs -->
+  <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
+  <form method="post"><button id="logout" value="logout">Log out</button></form>
 
   <div class="board"></div>
     <script src="{{url_for('static', filename='script.js')}}" defer></script>
@@ -66,14 +67,11 @@
         else sendMessage("game", "start");
       });
 
-      // logOutButton.addEventListener("click", () => {
-      //   location.href="{{ url_for('auth') }}"
-      // });
-
       socketio.on("start", (data) => {
         color = data.color;
         console.log(data.color);
         waitingRoom.style.display = "none";
+        document.title = "Game in progress..."
         createBoard();
       });
 

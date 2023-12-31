@@ -1,0 +1,12 @@
+Flask-SocketIO compatibility with GUnicorn and Nginx:
+https://flask-socketio.readthedocs.io/en/latest/deployment.html
+Use gunicorn --worker-class eventlet -w 1 module:app
+Also remember, https://socket.io/docs/v4/reverse-proxy/
+
+Points to remember:
+Install GUnicorn
+Set it up
+Install Nginx
+Set it up (go the sites-enabled, sites-available route, create these folders if they don't exist, Google regarding this.)
+Get a certbot certificate
+MAKE SURE TO PORT FORWARD HTTP AND HTTPS

@@ -45,5 +45,10 @@ Later, maybe consider cases where the player might leave in the middle of a game
 Victory tracking
 Implement a timer for when a player leaves after a game has started, and shut down the room and award the remaining player the victory?
 Maybe, when player logs out and logs back into the same room, automatically refresh the page? Either this, or make the button say "Continue" instead of "Start Game" at this point.
+When last player in a room disconnects, display a message saying that the room was closed.
+Implement a chatting feature while the game is going on, and also in the waiting room.
+Perhaps create a separate popup based Create Account button? Same goes for Login aswell.
+Upon login, if their previous game is running, add them back automatically
+Cookies to save username and password
 
 ---------------------> For now, I'm going make player1 in the room play White and player2 in the room play Black. <---------------------
