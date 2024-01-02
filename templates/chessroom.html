@@ -9,55 +9,65 @@
       crossorigin="anonymous"
     ></script>
     <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
-
+    <!-- euu -->
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" />
+    <!-- <link rel="stylesheet" href="../static/style.css"> -->
   </head>
+
   <body>
-  <div id="waiting-room">
+  <div id="waiting-room" class="flex-col space-around gap">
     <dialog id="failedToStartGame">
       <h1 id="failureMessage"></h1>
       <form method="dialog"><button>Ok</button></form>
     </dialog>
-      <h2 id="playerCount"></h2>
-      <h3 id="playerNames"></h3>
+      <!-- <h2 id="playerCount"></h2>
+      <h3 id="playerNames"></h3> -->
+      <h3 class="room-code">
+          Code : {{room_code}}
+      </h3>
+      <div class="players flex space-around">
+        <h2 id="player-1">
+          ABCD
+        </h2>
+        <h2>vs</h2>
+        <h2 id="player-2">
+          EFGH
+        </h2>
+      </div>
       <button id="startGame">Start Game</button>
-      <div id="messages"></div>
-  </div>
+    </div>
+    <div id="messages">heheeyyy</div>
 
   <!-- Common to both divs -->
-  <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1>
-  <form method="post"><button id="logout" value="logout">Log out</button></form>
+  <!-- <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1> -->
+  <form method="post" id="logout" ><button value="logout" id="logoutButton">Log out</button></form>
 
   <div class="board"></div>
-    <script src="{{url_for('static', filename='script.js')}}" defer></script>
+    <!-- euu -->
+    <!-- <script src="{{url_for('static', filename='script.js')}}" defer></script> -->
+    <script src="../static/script.js"></script>
     <script type="text/javascript">
       let color;
 
       var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
       const waitingRoom = document.getElementById("waiting-room");
       const messages = document.getElementById("messages");
-      const playerCount = document.getElementById("playerCount");
-      const playerNames = document.getElementById("playerNames");
       const startGameButton = document.getElementById("startGame");
-      // const logOutButton = document.getElementById("logout");
       const failedToStartGameModal = document.getElementById("failedToStartGame");
       const failedToStartGameMsg = document.getElementById("failureMessage");
       const gameBoard = document.getElementsByClassName("board");
+      const player1=document.getElementById("player-1");
+      const player2=document.getElementById("player-2");
       let currNumPlayers = 0;
 
       socketio.on("message", (data) => {
-        messages.innerHTML += `
-        <div id="messages" class="text">
-            <span>
-                <strong>${data.name}</strong> ${data.message}
-            </span>
-        </div>`;
-        playerCount.innerHTML = `Current player count: ${data.playerCount}`;
+        messages.textContent=data.name+" "+data.message;
+        animateMessage();
         currNumPlayers = parseInt(data.playerCount);
-        let playerNamesMsg = `Usernames of the players in this room: ${data.player1.username}`;
+        player1.textContent=data.player1.username;
         if (data.player2.username !== "")
-          playerNamesMsg += ` and ${data.player2.username}`;
-        playerNames.innerHTML = playerNamesMsg;
+          player2.textContent=data.player2.username;
+        else player2.textContent="...";
       });
 
       startGameButton.addEventListener("click", () => {
@@ -88,7 +98,24 @@
       socketio.on("gameEnded", () => {
         gameBoard.innerHTML = ``;
         waitingRoom.style.display = "block";
-      })
+      });
+
+      function animateMessage(){
+        messages.animate(
+          [{transform : "translate(-100%,0)"}],
+          {duration : 500,fill : "forwards"}
+        );
+        setTimeout(
+          ()=>{
+            messages.animate(
+            {transform : "translate(0,0)"},
+            {duration : 500,fill : "forwards"}
+            );
+          }
+          ,2000
+        );
+      };
+
     </script>
   </body>
 </html>

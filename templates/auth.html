@@ -91,6 +91,9 @@
         background-color: #994d1c;
         color: #f5cca0;
       }
+      .message{
+        color: #BD3332;
+      }
       @media (max-width: 1020px) {
         .container {
           grid-template-columns: 1fr;
@@ -98,6 +101,12 @@
         .left,
         .right {
           padding: 100px 0 100px 0;
+        }
+        .right{
+          grid-row: 1;
+        }
+        .left h1{
+          font-size: 4rem;
         }
       }
     </style>
@@ -112,6 +121,7 @@
   <body>
     <div class="container">
       <div class="left">
+        <!-- euuu -->
         <img
           src="{{url_for('static', filename='king_logo.svg')}}"
           alt=""
