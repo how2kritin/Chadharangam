@@ -86,7 +86,8 @@ function addImgToSqr(square, piece) {
   console.log(piece);
   let img = document.createElement("img");
   img.classList.add("piece");
-  img.src = `/static/${intToPngName(piece)}.png`
+  let pathToStaticFolder = `{{url_for('static', filename='')}}`;
+  img.src = `${pathToStaticFolder}${intToPngName(piece)}.png`
   square.appendChild(img);
 }
 
