@@ -9,9 +9,7 @@
       crossorigin="anonymous"
     ></script>
     <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
-    <!-- euu -->
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" />
-    <!-- <link rel="stylesheet" href="../static/style.css"> -->
   </head>
 
   <body>
@@ -43,9 +41,7 @@
   <form method="post" id="logout" ><button value="logout" id="logoutButton">Log out</button></form>
 
   <div class="board"></div>
-    <!-- euu -->
-    <!-- <script src="{{url_for('static', filename='script.js')}}" defer></script> -->
-    <script src="../static/script.js"></script>
+  <script src="{{url_for('script_js')}}" referrerpolicy="origin" defer></script>
     <script type="text/javascript">
       let color;
 

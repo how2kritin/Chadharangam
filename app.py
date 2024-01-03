@@ -118,6 +118,11 @@ def logout():
     return redirect("/")
 
 
+@app.route("/script_js")
+def script_js():
+    return render_template("js/script.js")
+
+
 @socketio.on("connect")
 def connect():
     username, room_code = session.get('username'), session.get('room_code')
