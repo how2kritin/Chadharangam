@@ -62,7 +62,7 @@ def handleUser():
         if room_code not in rooms:
             flash(
                 "A room with this code doesn't exist. Please enter a valid room code, or don't enter a room code at all to create a new room.")
-            return redirect("/")
+            return redirect(url_for("auth"))
 
     else:
         print(
@@ -84,18 +84,18 @@ def handleUser():
             if not bcrypt.check_password_hash(data[0][1], password):
                 flash(
                     "This username already exists in the database, but the entered password is incorrect. You can either enter the correct password to log in, or use a different username to create an account.")
-                return redirect("/")
+                return redirect(url_for("auth"))
             else:
                 print("Successfully logged in!")
                 session['username'], session['room_code'] = username, room_code
-                return redirect("/game")
+                return redirect(url_for("waitForPlayer"))
         else:
             print("New user, creating an account.")
             cursor.execute("INSERT INTO USERS (username, passwordHash) VALUES (?, ?)", (username, passwordHash))
             database.commit()
             print("Successfully added this user to the database!")
             session['username'], session['room_code'] = username, room_code
-            return redirect("/game")
+            return redirect(url_for("waitForPlayer"))
 
 
 @app.route("/game", methods=['GET', 'POST'])
@@ -105,20 +105,20 @@ def waitForPlayer():
 
     username, room_code = session.get('username'), session.get('room_code')
     if room_code is None or username is None or room_code not in rooms:
-        return redirect("/")
+        return redirect(url_for("auth"))
     elif rooms[room_code]["members"] >= 2:
         flash("Sorry, this room already has 2 players! Please join a different room, or create a new room.")
-        return redirect("/")
+        return redirect(url_for("auth"))
     elif rooms[room_code]["inProgress"] and rooms[room_code]["player1"]["username"] != username and rooms[room_code]["player2"]["username"] != username:
         flash("Sorry, this room has a game currently in progress. Please join a different room, or create a new room.")
-        return redirect("/")
+        return redirect(url_for("auth"))
 
     return render_template("chessroom.html", username=username, room_code=room_code, messages=rooms[room_code]["messages"])
 
 
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect(url_for("auth"))
 
 
 @app.route("/script_js")
