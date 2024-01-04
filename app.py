@@ -71,7 +71,7 @@ def handleUser():
         while room_code in rooms:
             room_code = generate_random_string(4)
         rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""},
-                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": ""}
+                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": "", "messages": []}
 
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
@@ -159,7 +159,7 @@ def connect():
 
     join_room(room_code)  # Join the room only after all checks have passed.
     if not resumeGame:
-        send({"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
+        emit("playerAlerts", {"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
         print(f"{username} has joined the room {room_code}")
     else:  # In case you have to resume the game:
         emit("start", {"message": "start", "color": color}, to=player["clientID"])
@@ -269,6 +269,11 @@ def gameOver(data):
         rooms[room_code]["allMoves"] = []
 
     emit("gameEnded", to=request.sid)
+
+
+@socketio.on("chat")
+def chat(data):
+
 
 
 # Run the flask server

@@ -13,74 +13,98 @@
   </head>
 
   <body>
-  <div id="waiting-room" class="flex-col space-around gap">
-    <dialog id="failedToStartGame">
-      <h1 id="failureMessage"></h1>
-      <form method="dialog"><button>Ok</button></form>
-    </dialog>
+    <div id="waiting-room" class="flex-col space-around gap">
+      <dialog id="failedToStartGame">
+        <h1 id="failureMessage"></h1>
+        <form method="dialog"><button>Ok</button></form>
+      </dialog>
       <!-- <h2 id="playerCount"></h2>
       <h3 id="playerNames"></h3> -->
-      <h3 class="room-code">
-          Code : {{room_code}}
-      </h3>
+      <h3 class="room-code">Code : {{room_code}}</h3>
       <div class="players flex space-around">
-        <h2 id="player-1">
-          ABCD
-        </h2>
+        <h2 id="player-1"></h2>
         <h2>vs</h2>
-        <h2 id="player-2">
-          EFGH
-        </h2>
+        <h2 id="player-2"></h2>
       </div>
       <button id="startGame">Start Game</button>
     </div>
-    <div id="messages">heheeyyy</div>
+    <div id="messageAlert">nike and crytin</div>
+    <div class="chatBox">
+      <h1>Room: {{room_code}}</h1>
+      <div class="messages" id="messages"></div>
+      <div class="inputs">
+        <input
+          type="text"
+          rows="3"
+          placeholder="Enter your message here"
+          name="message"
+          id="message"
+        />
+        <button
+          type="button"
+          name="sendMessage"
+          id="send-msg-btn"
+          onclick="sendMessage()"
+        >
+          Send
+        </button>
+      </div>
+    </div>
 
-  <!-- Common to both divs -->
-  <!-- <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1> -->
-  <form method="post" id="logout" ><button value="logout" id="logoutButton">Log out</button></form>
+    <!-- Common to both divs -->
+    <!-- <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1> -->
+    <form method="post" id="logout">
+      <button value="logout" id="logoutButton">Log out</button>
+    </form>
 
-  <div class="board"></div>
-  <script src="{{url_for('script_js')}}" referrerpolicy="origin" defer></script>
+    <div class="board"></div>
+    <script
+      src="{{url_for('script_js')}}"
+      referrerpolicy="origin"
+      defer
+    ></script>
     <script type="text/javascript">
-      let color;
-
       var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
       const waitingRoom = document.getElementById("waiting-room");
-      const messages = document.getElementById("messages");
+      const messageAlert = document.getElementById("messageAlert");
+      const messages = document.getElementById("messages")
       const startGameButton = document.getElementById("startGame");
       const failedToStartGameModal = document.getElementById("failedToStartGame");
       const failedToStartGameMsg = document.getElementById("failureMessage");
       const gameBoard = document.getElementsByClassName("board");
-      const player1=document.getElementById("player-1");
-      const player2=document.getElementById("player-2");
+      const player1 = document.getElementById("player-1");
+      const player2 = document.getElementById("player-2");
       let currNumPlayers = 0;
+      let color;
 
-      socketio.on("message", (data) => {
-        messages.textContent=data.name+" "+data.message;
-        animateMessage();
+      socketio.on("playerAlerts", (data) => {
+        messageAlert.textContent = data.name + " " + data.message;
+        animateMessage(messageAlert);
         currNumPlayers = parseInt(data.playerCount);
-        player1.textContent=data.player1.username;
+        player1.textContent = data.player1.username;
         if (data.player2.username !== "")
-          player2.textContent=data.player2.username;
-        else player2.textContent="...";
+          player2.textContent = data.player2.username;
+        else player2.textContent = "...";
       });
 
       startGameButton.addEventListener("click", () => {
-        if(currNumPlayers < 2){
+        if (currNumPlayers < 2) {
           failedToStartGameMsg.innerHTML = `Insufficient players to start the game. You need exactly 2 players. You currently have ${currNumPlayers}.`;
           failedToStartGameModal.showModal();
-        }
-        else sendMessage("game", "start");
+        } else sendMessage("game", "start");
       });
 
       socketio.on("start", (data) => {
         color = data.color;
         console.log(data.color);
         waitingRoom.style.display = "none";
-        document.title = "Game in progress..."
+        document.title = "Game in progress...";
         createBoard();
       });
+
+      function createMessage(name, message){
+
+      }
 
       function sendMessage(event, message) {
         if (message === "") return;
@@ -96,22 +120,18 @@
         waitingRoom.style.display = "block";
       });
 
-      function animateMessage(){
-        messages.animate(
-          [{transform : "translate(-100%,0)"}],
-          {duration : 500,fill : "forwards"}
-        );
-        setTimeout(
-          ()=>{
-            messages.animate(
-            {transform : "translate(0,0)"},
-            {duration : 500,fill : "forwards"}
-            );
-          }
-          ,2000
-        );
-      };
-
+      function animateMessage(div) {
+        div.animate([{ transform: "translate(-100%,0)" }], {
+          duration: 500,
+          fill: "forwards",
+        });
+        setTimeout(() => {
+          div.animate(
+            { transform: "translate(0,0)" },
+            { duration: 500, fill: "forwards" },
+          );
+        }, 2000);
+      }
     </script>
   </body>
 </html>
