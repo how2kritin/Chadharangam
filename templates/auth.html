@@ -140,6 +140,7 @@
           {% endfor %} {% endif %} {% endwith %}
         </div>
         <form action={{url_for("handleUser")}} method="POST">
+          <h1>Log in</h1>
           <div class="form-group">
             <label for="username">Username</label>
             <input
@@ -162,21 +163,65 @@
               required
             />
           </div>
-          <div class="form-group">
-            <label for="room_code"
-              >Please enter a room code if you have one</label
-            >
+          <button type="submit" class="button" id="log-in-btn">Log in</button>
+          <button class="button" id="create-acc-btn">Or, create a new account</button>
+          <dialog id="create-account">
+            <h1>Create account</h1>
+            <div class="form-group">
+            <label for="username">Username</label>
             <input
               type="text"
               class="form-control"
-              id="room_code"
-              name="room_code"
-              placeholder="Enter a room code"
+              id="create-username"
+              name="create-username"
+              placeholder="Enter your username"
+              required
             />
           </div>
-          <button type="submit" class="button">Submit</button>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="create-password"
+              name="create-password"
+              placeholder="Enter a password"
+              required
+            />
+          </div>
+            <div class="form-group">
+            <label for="password">Confirm Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="confirm-password"
+              name="confirm-password"
+              placeholder="Enter a password"
+              onkeyup="checkpasswords()"
+              required
+            />
+          </div>
+            <form method="dialog"><button>Create an account</button></form>
+          </dialog>
+<!--          <div class="form-group">-->
+<!--            <label for="room_code"-->
+<!--              >Please enter a room code if you have one</label-->
+<!--            >-->
+<!--            <input-->
+<!--              type="text"-->
+<!--              class="form-control"-->
+<!--              id="room_code"-->
+<!--              name="room_code"-->
+<!--              placeholder="Enter a room code"-->
+<!--            />-->
+<!--          </div>-->
+<!--          <button type="submit" class="button">Submit</button>-->
         </form>
       </div>
     </div>
+  <script>
+    function checkpasswords(){
+    }
+  </script>
   </body>
 </html>
