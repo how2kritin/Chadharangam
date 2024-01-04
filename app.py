@@ -5,6 +5,9 @@ from flask_bcrypt import Bcrypt  # Shall use bcrypt (Blowfish cypher) to hash pa
 import sqlite3
 import os  # to create a directory for the databases, if a directory doesn't exist already.
 import random
+import eventlet
+
+eventlet.monkey_patch()
 
 path = "Databases"
 if not os.path.exists(path):
