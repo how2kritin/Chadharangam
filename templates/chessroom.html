@@ -99,12 +99,11 @@
       });
 
       socketio.on("start", (data) => {
+        color = data.color;
+        console.log(data.color);
         waitingRoom.style.display = "none";
         document.title = "Game in progress...";
         createBoard();
-        color = data.color;
-        console.log(data.color);
-        
       });
 
       function createMessage(name, message) {
