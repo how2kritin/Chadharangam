@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, session, flash, url_for  # Import Flask and render_template classes from the flask module.
 from flask_cors import CORS
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
+from flask_bcrypt import Bcrypt  # Shall use bcrypt (Blowfish cypher) to hash passwords (one-way).
 import sqlite3
 import os  # to create a directory for the databases, if a directory doesn't exist already.
 import random
@@ -12,7 +13,7 @@ if not os.path.exists(path):
 # Create the databases
 database = sqlite3.connect('Databases/users.db')
 database.execute(
-    "CREATE TABLE IF NOT EXISTS USERS (username TEXT PRIMARY KEY, password TEXT, wins INT DEFAULT 0, losses INT DEFAULT 0, draws INT DEFAULT 0)")  # text passwords for now, encrypt later.
+    "CREATE TABLE IF NOT EXISTS USERS (username TEXT PRIMARY KEY, passwordHash TEXT, wins INT DEFAULT 0, losses INT DEFAULT 0, draws INT DEFAULT 0)")
 
 # Create the flask server and initialise the session
 app = Flask(__name__)
@@ -20,6 +21,7 @@ app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SECRET_KEY"] = "somerandosecretkeylol1729!!"
 socketio = SocketIO(app)
+bcrypt = Bcrypt(app)
 
 CORS(app)
 
@@ -51,10 +53,11 @@ def auth():
 def handleUser():
     username = request.form.get('username')
     password = request.form.get('password')
+    passwordHash = bcrypt.generate_password_hash(password).decode('UTF-8')
     room_code = request.form.get('room_code')
 
     if room_code:
-        print(f"Username is {username}, password is {password}, room code entered is {room_code}.")
+        print(f"Username is {username}, entered password's hash is {passwordHash}, room code entered is {room_code}.")
         # Check if the entered room code is valid.
         if room_code not in rooms:
             flash(
@@ -63,7 +66,7 @@ def handleUser():
 
     else:
         print(
-            f"Username is {username}, password is {password}. Generating a room code. Will use the room code if the username and password are valid.")
+            f"Username is {username}, entered password's hash is {passwordHash}. Generating a room code. Will use the room code if the username and password are valid.")
         room_code = generate_random_string(4)
         while room_code in rooms:
             room_code = generate_random_string(4)
@@ -73,12 +76,12 @@ def handleUser():
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
         cursor = database.cursor()
-        query = f'SELECT username, password FROM USERS WHERE username="{username}"'
+        query = f'SELECT username, passwordHash FROM USERS WHERE username="{username}"'
         cursor.execute(query)
         data = cursor.fetchall()  # List of tuples
 
         if len(data) != 0:  # Check if user already exists in the database
-            if data[0][1] != password:
+            if not bcrypt.check_password_hash(data[0][1], password):
                 flash(
                     "This username already exists in the database, but the entered password is incorrect. You can either enter the correct password to log in, or use a different username to create an account.")
                 return redirect("/")
@@ -88,7 +91,7 @@ def handleUser():
                 return redirect("/game")
         else:
             print("New user, creating an account.")
-            cursor.execute("INSERT INTO USERS (username, password) VALUES (?, ?)", (username, password))
+            cursor.execute("INSERT INTO USERS (username, passwordHash) VALUES (?, ?)", (username, passwordHash))
             database.commit()
             print("Successfully added this user to the database!")
             session['username'], session['room_code'] = username, room_code

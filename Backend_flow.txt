@@ -39,7 +39,6 @@ Tables I can use:
 Latest:
 
 To-Do:
-ENCRYPT PASSWORDS!
 Prevent the same user from being in the same room twice or two different rooms at once.
 Later, maybe consider cases where the player might leave in the middle of a game being loaded or something?
 Victory tracking -> Done I think? Need to display these stats in the waiting room though.
