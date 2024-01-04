@@ -1,3 +1,4 @@
+bcrypt==4.1.2
 bidict==0.22.1
 blinker==1.7.0
 cachelib==0.10.2
@@ -10,6 +11,7 @@ dnspython==2.4.2
 docopt==0.6.2
 eventlet==0.34.2
 Flask==3.0.0
+Flask-Bcrypt==1.0.1
 Flask-Cors==4.0.0
 Flask-Session==0.5.0
 Flask-SocketIO==5.3.6
