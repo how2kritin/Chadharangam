@@ -99,6 +99,10 @@ button {
   gap: 15px;
 }
 
+.inline-flex{
+  display: inline-flex;
+}
+
 .flex {
   display: flex;
 }
@@ -110,6 +114,10 @@ button {
 
 .space-around {
   justify-content: space-around;
+}
+
+.center{
+  justify-content: center;
 }
 
 h1,
@@ -154,19 +162,57 @@ button {
   position: absolute;
   left: 100%;
   top: 0%;
+  width: max-content;
   background-color: #f5cca0;
   font-size: 1.5rem;
   padding: 25px;
   z-index: 1000;
 }
 
-.messages {
-  /* NIKESH LOOK AT THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (i already created this class's css so modify here ok) */
-  overflow-y: scroll;
-}
-
 .muted {
   /* NIKESH LOOK AT THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (i already created this class's css so modify here ok) */
+  /* Thank you kritin it helped a lot <3 */
   font-size: 10px;
   color: darkgray;
+}
+
+#failedToStartGame{
+  width: 50vw;
+  text-align: center;
+  background-color: #f5cca0;
+}
+
+.chatWindow{
+  position: absolute;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.chatBox{
+  width: 25vw;
+  height: 50vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages{
+  overflow-y: scroll;
+  flex: auto;
+}
+
+.message{
+  vertical-align: bottom;
+}
+
+#chatForm{
+  display: flex;
+}
+
+#chatInput{
+  flex: 4;
+}
+
+#chatForm button[type=submit]{
+  padding: 0px;
 }
