@@ -113,7 +113,7 @@ def waitForPlayer():
         flash("Sorry, this room has a game currently in progress. Please join a different room, or create a new room.")
         return redirect("/")
 
-    return render_template("chessroom.html", username=username, room_code=room_code)
+    return render_template("chessroom.html", username=username, room_code=room_code, messages=rooms[room_code]["messages"])
 
 
 def logout():
@@ -273,7 +273,14 @@ def gameOver(data):
 
 @socketio.on("chat")
 def chat(data):
+    username, room_code = session.get("username"), session.get("room_code")
+    if room_code not in rooms:
+        return
 
+    msgContent = {"name": username, "message": data["data"]}
+    emit("chat", msgContent, to=room_code)
+    rooms[room_code]["messages"].append(msgContent)
+    print(f"User {username} in room {room_code} said: {msgContent['message']}")
 
 
 # Run the flask server

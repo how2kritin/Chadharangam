@@ -28,23 +28,23 @@
       </div>
       <button id="startGame">Start Game</button>
     </div>
-    <div id="messageAlert">nike and crytin</div>
+    <div id="messageAlert">nikes and crytin</div>
     <div class="chatBox">
-      <h1>Room: {{room_code}}</h1>
+      <h1>Code: {{room_code}}</h1>
       <div class="messages" id="messages"></div>
       <div class="inputs">
         <input
           type="text"
           rows="3"
           placeholder="Enter your message here"
-          name="message"
-          id="message"
+          name="chatbox"
+          id="chatbox"
         />
         <button
           type="button"
           name="sendMessage"
           id="send-msg-btn"
-          onclick="sendMessage()"
+          onclick="sendChatMessage()"
         >
           Send
         </button>
@@ -67,15 +67,18 @@
       var socketio = io(); // Connects to the backend Flask server, and emits a connect event.
       const waitingRoom = document.getElementById("waiting-room");
       const messageAlert = document.getElementById("messageAlert");
-      const messages = document.getElementById("messages")
+      const messages = document.getElementById("messages");
       const startGameButton = document.getElementById("startGame");
       const failedToStartGameModal = document.getElementById("failedToStartGame");
       const failedToStartGameMsg = document.getElementById("failureMessage");
       const gameBoard = document.getElementsByClassName("board");
       const player1 = document.getElementById("player-1");
       const player2 = document.getElementById("player-2");
+      const chatbox = document.getElementById("chatbox");
       let currNumPlayers = 0;
       let color;
+
+      chatbox.addEventListener("keydown", (event) => {if(event.key === 'Enter') sendChatMessage()}); // To send message from input when enter is pressed.
 
       socketio.on("playerAlerts", (data) => {
         messageAlert.textContent = data.name + " " + data.message;
@@ -102,8 +105,27 @@
         createBoard();
       });
 
-      function createMessage(name, message){
+      function createMessage(name, message) {
+        const content = `
+        <div class="text">
+          <span>
+            <strong>${name}</strong>: ${message}
+          </span>
+          <span class="muted">
+            ${new Date().toLocaleString()}
+          </span>
+        </div>
+        `;
+        messages.innerHTML += content;
+      }
 
+      socketio.on("chat", (data) => {
+        createMessage(data.name, data.message);
+      });
+
+      function sendChatMessage() {
+        sendMessage("chat", chatbox.value);
+        chatbox.value = "";
       }
 
       function sendMessage(event, message) {
@@ -133,5 +155,10 @@
         }, 2000);
       }
     </script>
+    {% for msg in messages %}
+    <script type="text/javascript">
+      createMessage("{{msg.name}}", "{{msg.message}}");
+    </script>
+    {% endfor %}
   </body>
 </html>

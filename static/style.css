@@ -1,161 +1,172 @@
-html{
-    height: 100%;
+html {
+  height: 100%;
 }
 
-body{
-    background-color: #994D1C;
-    min-height: 100%;
-    margin: 0;
-    overflow: hidden;
-}   
-
-.room-code{
-    text-align: center;
+body {
+  background-color: #994d1c;
+  min-height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
-.board{
-    margin: auto;
-    display: grid;
-    max-width: 650px;
-    grid-template-columns: repeat(8,1fr);
+.room-code {
+  text-align: center;
 }
 
-.black,.white{
-    width: auto;
-    aspect-ratio: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.board {
+  margin: auto;
+  display: grid;
+  max-width: 650px;
+  grid-template-columns: repeat(8, 1fr);
 }
 
-.selected{
-    border: 4px solid green;
+.black,
+.white {
+  width: auto;
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.in_check{
-    background-color: red;
+.selected {
+  border: 4px solid green;
 }
 
-
-.black{
-    background-color: #945021;
+.in_check {
+  background-color: red;
 }
 
-.white{
-    background-color: #D9A45C;
+.black {
+  background-color: #945021;
 }
 
-.pieceSelected{
-    background-color: green;
-}
-.piece{
-    width: 100%;
-    height: 100%;
+.white {
+  background-color: #d9a45c;
 }
 
-.piece:hover{
-    cursor: pointer;
+.pieceSelected {
+  background-color: green;
+}
+.piece {
+  width: 100%;
+  height: 100%;
 }
 
-img{
-    -webkit-user-drag: none;
-    user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+.piece:hover {
+  cursor: pointer;
 }
 
-.result{
-    position: absolute;
-    border: red 3px solid;
-    left:0px;
-    top:0px;
-    background-color: yellow;
-    font-size: 35px;
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
 }
 
-*{
-    font-family: sans-serif;
+.result {
+  position: absolute;
+  border: red 3px solid;
+  left: 0px;
+  top: 0px;
+  background-color: yellow;
+  font-size: 35px;
 }
 
-button{
-    box-shadow: none;
-    background-color: transparent;
+* {
+  font-family: sans-serif;
 }
 
-#waiting-room{
-    position: absolute;
-    background-color: #F5CCA0;
-    min-width: 30vw;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%,-50%);
-    padding: 25px;
-    font-size: 2rem;
-    border-radius: 3%;
+button {
+  box-shadow: none;
+  background-color: transparent;
 }
 
-.gap{
-    gap: 15px;
+#waiting-room {
+  position: absolute;
+  background-color: #f5cca0;
+  min-width: 30vw;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 25px;
+  font-size: 2rem;
+  border-radius: 3%;
 }
 
-.flex{
-    display: flex;
+.gap {
+  gap: 15px;
 }
 
-.flex-col{
-    display: flex;
-    flex-direction: column;
+.flex {
+  display: flex;
 }
 
-.space-around{
-    justify-content: space-around;
+.flex-col {
+  display: flex;
+  flex-direction: column;
 }
 
-h1,h2,h3{
-    margin: 0;
+.space-around {
+  justify-content: space-around;
 }
 
-#logout{
-    padding: 10px;
-    position: absolute;
-    left: 100%;
-    top: 100%;
-    transform: translate(-100%,-100%);
-    width: max-content;
+h1,
+h2,
+h3 {
+  margin: 0;
 }
 
-#startGame,#logoutButton{
-    color: black;
-    background-color: #f5cca0;
-    border-top-left-radius: 50px;
-    border-bottom-left-radius: 50px;
-    border-top-right-radius: 50px;
-    border-bottom-right-radius: 50px;
+#logout {
+  padding: 10px;
+  position: absolute;
+  left: 100%;
+  top: 100%;
+  transform: translate(-100%, -100%);
+  width: max-content;
 }
 
-#startGame:hover,#logoutButton:hover{
-    background-color: #994d1c;
-    color: #f5cca0;
+#startGame,
+#logoutButton {
+  color: black;
+  background-color: #f5cca0;
+  border-top-left-radius: 50px;
+  border-bottom-left-radius: 50px;
+  border-top-right-radius: 50px;
+  border-bottom-right-radius: 50px;
 }
 
-button{
-    font-size: 1rem;
-    padding: 20px;
-    width: max-content;
-    margin: auto;
+#startGame:hover,
+#logoutButton:hover {
+  background-color: #994d1c;
+  color: #f5cca0;
 }
 
-#messageAlert{
-    position: absolute;
-    left: 100%;
-    top: 0%;
-    background-color: #F5CCA0;
-    font-size: 1.5rem;
-    padding: 25px;
-    z-index: 1000;
+button {
+  font-size: 1rem;
+  padding: 20px;
+  width: max-content;
+  margin: auto;
 }
 
-.messages{ /* NIKESH LOOK AT THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (i already created this class's css so modify here ok) */
-    overflow-y: scroll;
+#messageAlert {
+  position: absolute;
+  left: 100%;
+  top: 0%;
+  background-color: #f5cca0;
+  font-size: 1.5rem;
+  padding: 25px;
+  z-index: 1000;
+}
+
+.messages {
+  /* NIKESH LOOK AT THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (i already created this class's css so modify here ok) */
+  overflow-y: scroll;
+}
+
+.muted {
+  /* NIKESH LOOK AT THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (i already created this class's css so modify here ok) */
+  font-size: 10px;
+  color: darkgray;
 }
