@@ -94,8 +94,7 @@ def login():
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
         cursor = database.cursor()
-        query = f'SELECT username, passwordHash FROM USERS WHERE username="{username}"'
-        cursor.execute(query)
+        cursor.execute('SELECT username, passwordHash FROM USERS WHERE username=(?)', (username,))
         data = cursor.fetchall()  # List of tuples
 
         if len(data) != 0:  # Check if user already exists in the database
@@ -122,8 +121,7 @@ def signup():
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
         cursor = database.cursor()
-        query = f'SELECT username FROM USERS WHERE username="{username}"'
-        cursor.execute(query)
+        cursor.execute("SELECT username FROM USERS WHERE username=(?)", (username,))
         data = cursor.fetchall()  # List of tuples
 
         if len(data) != 0:  # Check if user already exists in the database
@@ -366,8 +364,8 @@ def gameOver(data):
         with sqlite3.connect('Databases/users.db') as database:
             cursor = database.cursor()
             if outcome != "Stalemate":
-                cursor.execute("UPDATE USERS SET wins = wins + 1 WHERE username = (?);", winner["username"])
-                cursor.execute("UPDATE USERS SET losses = losses + 1 WHERE username = (?);", loser["username"])
+                cursor.execute("UPDATE USERS SET wins = wins + 1 WHERE username = (?);", (winner["username"],))
+                cursor.execute("UPDATE USERS SET losses = losses + 1 WHERE username = (?);", (loser["username"],))
             else:
                 cursor.execute("UPDATE USERS SET draws = draws + 1 WHERE username IN (?, ?)", (rooms[room_code]["player1"]["username"], rooms[room_code]["player2"]["username"]))
             database.commit()
