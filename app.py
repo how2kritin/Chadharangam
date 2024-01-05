@@ -69,8 +69,8 @@ def generate_random_string(length):
 # All the routes and their associated functions:
 @app.route("/", methods=["POST", "GET"])
 def auth():
-    if 'room_code' in session:
-        print(f"User {session['username']} was previously in a room. Sending them back to that room.")
+    if 'room_code' in session and session['room_code'] != "":
+        print(f"User {session['username']} was previously in the room {session['room_code']}. Sending them back to that room, if it exists.")
         return redirect(url_for("waitForPlayer"))
     if 'alert' not in session:
         session['alert'] = ""
@@ -266,7 +266,21 @@ def connect():
 def disconnect():
     username, room_code = session.get('username'), session.get('room_code')
     leave_room(room_code)
+    process_room_disconnection(username, room_code)
 
+
+@socketio.on("leaveRoom")
+def leaveRoom():
+    username, room_code = session.get('username'), session.get('room_code')
+    leave_room(room_code)
+    session['room_code'] = "hi"
+    session.pop("room_code", None)
+    print(session)
+    print(f"User {username} wanted to leave the room {room_code}")
+    process_room_disconnection(username, room_code)
+    emit("redirect", url_for("auth"), to=request.sid)
+
+def process_room_disconnection(username, room_code):
     roomsLock.acquire()
     if room_code in rooms:
         rooms[room_code]["members"] -= 1
@@ -286,9 +300,7 @@ def disconnect():
 
         send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
         print(f"{username} has left the room {room_code}")
-
     roomsLock.release()
-    # If the game has begun however, then, don't interchange the players. Keep them as is, i.e., don't do anything special in particular.
 
 
 @socketio.on("game")
@@ -348,24 +360,31 @@ def gameOver(data):
     roomsLock.acquire()
     if rooms[room_code]["whoWon"] == "":
         rooms[room_code]["whoWon"] = data["whoWon"]
-        winner = rooms[room_code]["player1"]["username"] if data["whoWon"] == "White" else rooms[room_code]["player2"]["username"]
-        loser = rooms[room_code]["player1"]["username"] if data["whoWon"] == "Black" else rooms[room_code]["player2"]["username"]
+        winner = rooms[room_code]["player1"] if data["whoWon"] == "White" else rooms[room_code]["player2"]
+        loser = rooms[room_code]["player1"] if data["whoWon"] == "Black" else rooms[room_code]["player2"]
         outcome = data["outcome"]
         # Update the SQL database as well.
         with sqlite3.connect('Databases/users.db') as database:
             cursor = database.cursor()
             if outcome != "Stalemate":
-                cursor.execute("UPDATE USERS SET wins = wins + 1 WHERE username = (?);", winner)
-                cursor.execute("UPDATE USERS SET losses = losses + 1 WHERE username = (?);", loser)
+                cursor.execute("UPDATE USERS SET wins = wins + 1 WHERE username = (?);", winner["username"])
+                cursor.execute("UPDATE USERS SET losses = losses + 1 WHERE username = (?);", loser["username"])
             else:
                 cursor.execute("UPDATE USERS SET draws = draws + 1 WHERE username IN (?, ?)", (rooms[room_code]["player1"]["username"], rooms[room_code]["player2"]["username"]))
             database.commit()
             rooms[room_code]["inProgress"] = False  # So that they cannot restart the game as soon as they go to the waiting room. They need to wait for the other player to arrive.
             # Also helps in the case where the other player disconnects after the game is over, and another person joins the lobby.
+        if outcome == "Forfeiture":  # In the case that game ended in forfeiture, let the other player know. (they won't emit a gameOver event to the server in this case.)
+            # The winner in this case is the other player.
+            emit("forfeitureEnd", {"whoWon": data["whoWon"]}, to=winner["clientID"])
+            rooms[room_code]["whoWon"] = ""
+            rooms[room_code]["allMoves"] = []
+
     else:  # If it is the second player sending the same request:
         rooms[room_code]["whoWon"] = ""
         rooms[room_code]["allMoves"] = []
 
+    print(f"Game has ended in room {room_code}")
     emit("gameEnded", to=request.sid)
     roomsLock.release()
 
