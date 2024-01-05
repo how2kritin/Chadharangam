@@ -10,12 +10,15 @@
     ></script>
     <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
     <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" />
+    <!-- ill use the below style sheet later for icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
   </head>
 
   <body>
     <div id="waiting-room" class="flex-col space-around gap">
       <dialog id="failedToStartGame">
-        <h1 id="failureMessage"></h1>
+        <h2 id="failureMessageHeading"></h2>
+        <p id="failureMessage"></p>
         <form method="dialog"><button>Ok</button></form>
       </dialog>
       <!-- <h2 id="playerCount"></h2>
@@ -29,25 +32,26 @@
       <button id="startGame">Start Game</button>
     </div>
     <div id="messageAlert">nikes and crytin</div>
-    <div class="chatBox">
-      <h1>Code: {{room_code}}</h1>
-      <div class="messages" id="messages"></div>
-      <div class="inputs">
-        <input
-          type="text"
-          rows="3"
-          placeholder="Enter your message here"
-          name="chatbox"
-          id="chatbox"
-        />
-        <button
-          type="button"
-          name="sendMessage"
-          id="send-msg-btn"
-          onclick="sendChatMessage()"
-        >
-          Send
-        </button>
+    <div class="chatWindow">
+      <div class="chatBox">
+        <h1>Code: {{room_code}}</h1>
+        <div class="messages" id="messages"></div>
+        <form onsubmit="sendChatMessage(); return false;" id="chatForm">
+          <input
+            type="input"
+            rows="3"
+            placeholder="Enter your message here"
+            name="chatInput"
+            id="chatInput"
+          />
+          <button
+            type="submit"
+            name="sendMessage"
+            id="send-msg-btn"
+          >
+            Send
+          </button>
+        </form>
       </div>
     </div>
 
@@ -68,16 +72,15 @@
       const messages = document.getElementById("messages");
       const startGameButton = document.getElementById("startGame");
       const failedToStartGameModal = document.getElementById("failedToStartGame");
-      const failedToStartGameMsg = document.getElementById("failureMessage");
+      const failedToStartGameHeading = document.getElementById("failureMessageHeading");
+      const failedToStartGameMessage = document.getElementById("failureMessage");
       const gameBoard = document.getElementById("entire-board");
       const player1 = document.getElementById("player-1");
       const player2 = document.getElementById("player-2");
-      const chatbox = document.getElementById("chatbox");
+      const chatInput = document.getElementById("chatInput");
       const logOutButton = document.getElementById("logoutButton");
       let currNumPlayers = 0;
       let color;
-
-      chatbox.addEventListener("keydown", (event) => {if(event.key === 'Enter') sendChatMessage()}); // To send message from input when enter is pressed.
 
       socketio.on("playerAlerts", (data) => {
         messageAlert.textContent = data.name + " " + data.message;
@@ -91,7 +94,8 @@
 
       startGameButton.addEventListener("click", () => {
         if (currNumPlayers < 2) {
-          failedToStartGameMsg.innerHTML = `Insufficient players to start the game. You need exactly 2 players. You currently have ${currNumPlayers}.`;
+          failedToStartGameHeading.innerHTML = `Insufficient players`;
+          failedToStartGameMessage.textContent=` To start the game, You need exactly 2 players. You currently have ${currNumPlayers}.`;
           failedToStartGameModal.showModal();
         } else sendMessage("game", "start");
       });
@@ -108,7 +112,7 @@
 
       function createMessage(name, message) {
         const content = `
-        <div class="text">
+        <div class="message">
           <span>
             <strong>${name}</strong>: ${message}
           </span>
@@ -118,6 +122,7 @@
         </div>
         `;
         messages.innerHTML += content;
+        messages.scrollTop=messages.scrollHeight-messages.clientHeight;
       }
 
       socketio.on("chat", (data) => {
@@ -125,8 +130,10 @@
       });
 
       function sendChatMessage() {
-        sendMessage("chat", chatbox.value);
-        chatbox.value = "";
+        if(chatInput.value){
+          sendMessage("chat", chatInput.value);
+          chatInput.value = "";
+        }
       }
 
       function sendMessage(event, message) {
