@@ -85,9 +85,9 @@
         messageAlert.textContent = data.name + " " + data.message;
         animateMessage(messageAlert);
         currNumPlayers = parseInt(data.playerCount);
-        player1.textContent = data.player1.username;
-        if (data.player2.username !== "")
-          player2.textContent = data.player2.username;
+        player1.textContent = data.player1;
+        if (data.player2 !== "")
+          player2.textContent = data.player2;
         else player2.textContent = "...";
       });
 
@@ -103,6 +103,7 @@
         color = data.color;
         console.log(data.color);
         waitingRoom.style.display = "none";
+        // waitingRoom.classList.add("invisible");
         document.title = "Game in progress...";
         logOutButton.innerText = "Forfeit Game";
         logOutButton.value = "forfeit";

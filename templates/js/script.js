@@ -27,6 +27,8 @@ let board = [
   [1, 1, 1, 1, 1, 1, 1, 1],
   [5, 2, 3, 9, 7, 3, 2, 5],
 ];
+let resultDivTimeout = 10;  // Result div timeout in seconds
+let resultDivTimeoutPtr;
 
 function resetGlobalVars(){
   white_pov = true;
@@ -51,6 +53,9 @@ function resetGlobalVars(){
     [1, 1, 1, 1, 1, 1, 1, 1],
     [5, 2, 3, 9, 7, 3, 2, 5],
   ];
+  clearTimeout(resultDivTimeoutPtr);
+  let resultDiv = document.getElementById("result-div");
+  if(resultDiv) resultDiv.remove();
 }
 //function that takes piece value as input and returns its name corresponding to its png
 
@@ -522,7 +527,9 @@ function forfeitureReceiver(data){
 function createResultDiv(result){
   let result_div = document.createElement("div");
   result_div.classList.add("result");
+  result_div.id = "result-div";
   result_div.textContent = result;
+  resultDivTimeoutPtr = setTimeout((result_div) => document.getElementById("result-div").remove(), resultDivTimeout * 1000)
   body.appendChild(result_div);
 }
 

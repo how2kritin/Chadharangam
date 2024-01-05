@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, request, session, url_for  # Import Flask and render_template classes from the flask module.
 from flask_cors import CORS
-from flask_socketio import SocketIO, send, join_room, leave_room, emit
+from flask_socketio import SocketIO, join_room, leave_room, emit
 from flask_bcrypt import Bcrypt  # Shall use bcrypt (Blowfish cypher) to hash passwords (one-way).
 from flask_session import Session
 import sqlite3
@@ -229,6 +229,7 @@ def connect():
     resumeGame = False
     rooms[room_code]["members"] += 1
     rooms[room_code]["timeout"] = -1  # Reset the timeout for this room.
+    print(f"Resetting the mark for deletion of room {room_code}")
     if not rooms[room_code]["inProgress"]:  # If the game hasn't started, do this.
         if rooms[room_code]["members"] == 1:
             rooms[room_code]["player1"]["username"] = username
@@ -252,7 +253,7 @@ def connect():
 
     join_room(room_code)  # Join the room only after all checks have passed.
     if not resumeGame:
-        emit("playerAlerts", {"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
+        emit("playerAlerts", {"name": username, "message": "has entered the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"]["username"], "player2": rooms[room_code]["player2"]["username"]}, to=room_code)
         print(f"{username} has joined the room {room_code}")
     else:  # In case you have to resume the game:
         emit("start", {"message": "start", "color": color}, to=player["clientID"])
@@ -287,6 +288,7 @@ def process_room_disconnection(username, room_code):
         rooms[room_code]["members"] -= 1
         if rooms[room_code]["members"] <= 0:
             rooms[room_code]["timeout"] = int(time.time())
+            print(f"Marked room {room_code} for deletion in {timeOutIn} seconds.")
 
         # If the game hasn't already begun, do this.
         if not rooms[room_code]["inProgress"]:
@@ -299,7 +301,7 @@ def process_room_disconnection(username, room_code):
                 rooms[room_code]["player2"]["username"] = ""
                 rooms[room_code]["player2"]["clientID"] = ""
 
-        send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
+        emit("playerAlerts",{"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"]["username"], "player2": rooms[room_code]["player2"]["username"]}, to=room_code)
         print(f"{username} has left the room {room_code}")
     roomsLock.release()
 

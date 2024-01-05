@@ -39,11 +39,11 @@ Tables I can use:
 Latest:
 
 To-Do:
-Prevent the same user from being in the same room twice or two different rooms at once.
+Prevent the same user from being in the same room twice or two different rooms at once -> This shouldn't happen, but verify that it doesn't.
 Implement a timer for when a player leaves after a game has started, and shut down the room and award the remaining player the victory?
 Weird lengthy chessboard glitch. Possibly after abandoning the game and starting a new one on the same account? idk, happened to Nikesh when he left the game window as is and came back to it like 10 mins later
-Add a leave room button in the waiting room, this should change to forfeit while the game is going on, and should award the other player the victory.
-Make the log out button forfeit the game if the game is going on, and also log the player out. Or, get rid of the log out button in the waiting room entirely. Discuss this with Nikesh.
+
+---------------------> For now, I'm going make player1 in the room play White and player2 in the room play Black. <---------------------
 
 Idea to clean up rooms that players haven't joined in "timeout" time:
 For every room, I will store a "timeout" key which is set to -1 if it is not supposed to timeout, and a timestamp (seconds from epoch) of the current time otherwise. I will have a timeOutIn
@@ -51,5 +51,3 @@ global variable. Once every "timeOutIn" seconds, a function will execute, which 
 currTime-timeoutkey >= timeOutIn. Will create a separate thread to execute this function.
 So, to do this in a thread-safe manner, I need to create a mutex lock.
 DONE IMPLEMENTING THE ABOVE IDEA.
-
----------------------> For now, I'm going make player1 in the room play White and player2 in the room play Black. <---------------------
