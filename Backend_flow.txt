@@ -45,4 +45,11 @@ Weird lengthy chessboard glitch. Possibly after abandoning the game and starting
 Add a leave room button in the waiting room, this should change to forfeit while the game is going on, and should award the other player the victory.
 Make the log out button forfeit the game if the game is going on, and also log the player out. Or, get rid of the log out button in the waiting room entirely. Discuss this with Nikesh.
 
+Idea to clean up rooms that players haven't joined in "timeout" time:
+For every room, I will store a "timeout" key which is set to -1 if it is not supposed to timeout, and a timestamp (seconds from epoch) of the current time otherwise. I will have a timeOutIn
+global variable. Once every "timeOutIn" seconds, a function will execute, which will go through the list of all the current rooms, and delete those rooms where
+currTime-timeoutkey >= timeOutIn. Will create a separate thread to execute this function.
+So, to do this in a thread-safe manner, I need to create a mutex lock.
+DONE IMPLEMENTING THE ABOVE IDEA.
+
 ---------------------> For now, I'm going make player1 in the room play White and player2 in the room play Black. <---------------------

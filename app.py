@@ -6,6 +6,8 @@ import sqlite3
 import os  # to create a directory for the databases, if a directory doesn't exist already.
 import random
 import eventlet
+import threading
+import time
 
 eventlet.monkey_patch()
 
@@ -30,7 +32,28 @@ CORS(app)
 
 # Miscellaneous global variables
 rooms = dict()
+roomsLock = threading.Lock()
 uppercaseLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+timeOutIn = 60  # Current timeout for room deletion/auto-victory set to 60 seconds.
+
+
+def cleanup_rooms():
+    global rooms
+    current_time = int(time.time())
+
+    roomsLock.acquire()
+    newRooms = {room_code: rooms[room_code] for room_code in rooms if rooms[room_code]["timeout"] == -1 or current_time - rooms[room_code]["timeout"] < timeOutIn}
+    for room in rooms:
+        if room not in newRooms:
+            print(f"Room {room} has been deleted since it has remained empty for at least {timeOutIn} seconds.")
+    rooms = newRooms
+    roomsLock.release()
+
+
+def cleanup_rooms_thread():
+    while True:
+        cleanup_rooms()
+        time.sleep(timeOutIn)
 
 
 def generate_random_string(length):
@@ -48,7 +71,7 @@ def generate_random_string(length):
 def auth():
     if 'room_code' in session:
         print(f"User {session['username']} was previously in a room. Sending them back to that room.")
-        redirect(url_for("waitForPlayer"))
+        return redirect(url_for("waitForPlayer"))
     if 'alert' not in session:
         session['alert'] = ""
     listOfQuotes = ["Chess players know how to mate!", "Google En Passant", "pawnhub.com", "Chess speaks for itself!",
@@ -125,18 +148,23 @@ def send_to_room():
 
     if room_code:
         # Check if the entered room code is valid.
+        roomsLock.acquire()
         if room_code not in rooms:
             session['alert'] = "A room with this code doesn't exist."
             print(f"User {session['username']} did not enter valid room code.")
+            roomsLock.release()
             return redirect(url_for("auth"))
+        roomsLock.release()
 
     else:
         print(f"User {session['username']} requested to create a new room. Generating a room code.")
         room_code = generate_random_string(4)
+        roomsLock.acquire()
         while room_code in rooms:
             room_code = generate_random_string(4)
         rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""},
-                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": "", "messages": []}
+                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": "", "messages": [], "timeout": -1}
+        roomsLock.release()
 
     print(f"Sending user {session['username']} to room {room_code}")
     session['room_code'] = room_code
@@ -151,17 +179,22 @@ def waitForPlayer():
         logout()
 
     username, room_code = session.get('username'), session.get('room_code')
+    roomsLock.acquire()
     if room_code is None or username is None or room_code not in rooms:
         session.pop('room_code', None)
+        roomsLock.release()
         return redirect(url_for("auth"))
     elif rooms[room_code]["members"] >= 2:
         session.pop('room_code', None)
         session['alert'] = "Sorry, this room already has 2 players! Please join a different room, or create a new room."
+        roomsLock.release()
         return redirect(url_for("auth"))
     elif rooms[room_code]["inProgress"] and rooms[room_code]["player1"]["username"] != username and rooms[room_code]["player2"]["username"] != username:
         session.pop('room_code', None)
         session['alert'] = "Sorry, this room has a game currently in progress. Please join a different room, or create a new room."
+        roomsLock.release()
         return redirect(url_for("auth"))
+    roomsLock.release()
 
     return render_template("chessroom.html", username=username, room_code=room_code, messages=rooms[room_code]["messages"])
 
@@ -180,16 +213,20 @@ def script_js():
 @socketio.on("connect")
 def connect():
     username, room_code = session.get('username'), session.get('room_code')
+    roomsLock.acquire()
     if room_code is None or username is None:
         session.pop('room_code', None)
+        roomsLock.release()
         return
     elif room_code not in rooms:  # If the user is in a room that doesn't exist as a valid room, then kick them out of that room.
         session.pop('room_code', None)
         leave_room(room_code)
+        roomsLock.release()
         return
 
     resumeGame = False
     rooms[room_code]["members"] += 1
+    rooms[room_code]["timeout"] = -1  # Reset the timeout for this room.
     if not rooms[room_code]["inProgress"]:  # If the game hasn't started, do this.
         if rooms[room_code]["members"] == 1:
             rooms[room_code]["player1"]["username"] = username
@@ -208,6 +245,7 @@ def connect():
         else:  # A random player has joined. Reject their connect request.
             print(f"Player with {username} tried to join the room {room_code} which already has a running game. They weren't in the room when the game started. Kicking them out.")
             rooms[room_code]["members"] -= 1
+            roomsLock.release()
             return
 
     join_room(room_code)  # Join the room only after all checks have passed.
@@ -221,14 +259,19 @@ def connect():
             emit("restoreState", {"moveMadeBy": move[0], "source": move[1], "destination": move[2]},
                  to=player["clientID"])
 
+    roomsLock.release()
+
 
 @socketio.on("disconnect")
 def disconnect():
     username, room_code = session.get('username'), session.get('room_code')
     leave_room(room_code)
 
+    roomsLock.acquire()
     if room_code in rooms:
         rooms[room_code]["members"] -= 1
+        if rooms[room_code]["members"] <= 0:
+            rooms[room_code]["timeout"] = int(time.time())
 
         # If the game hasn't already begun, do this.
         if not rooms[room_code]["inProgress"]:
@@ -244,18 +287,22 @@ def disconnect():
         send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
         print(f"{username} has left the room {room_code}")
 
-        # If the game has begun however, then, don't interchange the players. Keep them as is, i.e., don't do anything special in particular.
+    roomsLock.release()
+    # If the game has begun however, then, don't interchange the players. Keep them as is, i.e., don't do anything special in particular.
 
 
 @socketio.on("game")
 def message(data):
     username, room_code = session.get('username'), session.get('room_code')
+    roomsLock.acquire()
     if room_code not in rooms:
+        roomsLock.release()
         return
     if data['data'] == "start":
         startGame(username, room_code)
     else:
         sendPlayOfGame(data)
+    roomsLock.release()
 
 
 def sendPlayOfGame(data):
@@ -298,6 +345,7 @@ def gameOver(data):
     # For the first player that sends this info to the server (both will), store it in the database. Don't store it for the second player.
     # Close the game div, and reopen the waiting room div.
     username, room_code = session.get('username'), session.get('room_code')
+    roomsLock.acquire()
     if rooms[room_code]["whoWon"] == "":
         rooms[room_code]["whoWon"] = data["whoWon"]
         winner = rooms[room_code]["player1"]["username"] if data["whoWon"] == "White" else rooms[room_code]["player2"]["username"]
@@ -319,20 +367,25 @@ def gameOver(data):
         rooms[room_code]["allMoves"] = []
 
     emit("gameEnded", to=request.sid)
+    roomsLock.release()
 
 
 @socketio.on("chat")
 def chat(data):
     username, room_code = session.get("username"), session.get("room_code")
+    roomsLock.acquire()
     if room_code not in rooms:
+        roomsLock.release()
         return
 
     msgContent = {"name": username, "message": data["data"]}
     emit("chat", msgContent, to=room_code)
     rooms[room_code]["messages"].append(msgContent)
     print(f"User {username} in room {room_code} said: {msgContent['message']}")
+    roomsLock.release()
 
 
 # Run the flask server
 if __name__ == '__main__':
+    threading.Thread(target=cleanup_rooms_thread, daemon=True).start()
     socketio.run(app, host="0.0.0.0")
