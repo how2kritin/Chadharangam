@@ -9,12 +9,15 @@
       crossorigin="anonymous"
     ></script>
     <!-- The above script is to import Socket.IO library to JS. Taken from https://flask-socketio.readthedocs.io/en/latest/getting_started.html -->
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" />
+    <!-- <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" /> -->
     <!-- ill use the below style sheet later for icons -->
+    <link rel="stylesheet" href="../static/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
   </head>
 
   <body>
+    <div id="result"></div>
+
     <div id="waiting-room" class="flex-col space-around gap">
       <dialog id="failedToStartGame">
         <h2 id="failureMessageHeading"></h2>
@@ -29,7 +32,9 @@
       </div>
       <button id="startGame">Start Game</button>
     </div>
+
     <div id="messageAlert">nikes and crytin</div>
+
     <div class="chatWindow">
       <div class="chatBox">
         <h1>Code: {{room_code}}</h1>
@@ -52,13 +57,27 @@
         </form> 
       </div>
     </div>
-    <!-- Common to both divs -->
-    <!-- <h1>Your username is "{{username}}" and room code is "{{room_code}}".</h1> -->
+    
     <form method="post" id="logout">
       <button value="logout" id="logoutButton">Log out</button>
     </form>
-
+  </div>
+  <div id="game" class="invisible">
+    <div id="black-promotion" class="invisible">
+      <img src="{{url_for('static',filename='b9.png')}}" alt="" class="promo-piece"  data-value="-9">
+      <img src="{{url_for('static',filename='b5.png')}}" alt="" class="promo-piece" data-value="-5">
+      <img src="{{url_for('static',filename='b3.png')}}" alt="" class="promo-piece" data-value="-3">
+      <img src="{{url_for('static',filename='b2.png')}}" alt="" class="promo-piece" data-value="-2">
+    </div>
     <div class="board"></div>
+    <div id="white-promotion" class="invisible">
+      <img src="{{url_for('static',filename='w9.png')}}" alt="" class="promo-piece" data-value="9">
+      <img src="{{url_for('static',filename='w5.png')}}" alt="" class="promo-piece" data-value="5">
+      <img src="{{url_for('static',filename='w3.png')}}" alt="" class="promo-piece" data-value="3">
+      <img src="{{url_for('static',filename='w2.png')}}" alt="" class="promo-piece" data-value="2">
+    </div>
+    <script src="./js/script.js">
+    </script>
     <script
       src="{{url_for('script_js')}}"
       referrerpolicy="origin"
@@ -73,10 +92,11 @@
       const failedToStartGameModal = document.getElementById("failedToStartGame");
       const failedToStartGameHeading = document.getElementById("failureMessageHeading");
       const failedToStartGameMessage = document.getElementById("failureMessage");
-      const gameBoard = document.getElementsByClassName("board");
+      const gameBoard = document.getElementsByClassName("board")[0];
       const player1 = document.getElementById("player-1");
       const player2 = document.getElementById("player-2");
       const chatInput = document.getElementById("chatInput");
+      const game=document.getElementById("game");
       let currNumPlayers = 0;
       let color;
 
@@ -99,12 +119,12 @@
       });
 
       socketio.on("start", (data) => {
-        waitingRoom.style.display = "none";
-        document.title = "Game in progress...";
-        createBoard();
         color = data.color;
         console.log(data.color);
-        
+        waitingRoom.classList.toggle("invisible");
+        game.classList.toggle("invisible");
+        document.title = "Game in progress...";
+        createBoard();
       });
 
       function createMessage(name, message) {
@@ -144,7 +164,8 @@
 
       socketio.on("gameEnded", () => {
         gameBoard.innerHTML = ``;
-        waitingRoom.style.display = "block";
+        game.classList.toggle("invisible");
+        waitingRoom.classList.toggle("invisible");
       });
 
       function animateMessage(div) {
@@ -160,10 +181,10 @@
         }, 2000);
       }
     </script>
-    {% for msg in messages %}
+    <!-- {% for msg in messages %} -->
     <script type="text/javascript">
       createMessage("{{msg.name}}", "{{msg.message}}");
     </script>
-    {% endfor %}
+    <!-- {% endfor %}  -->
   </body>
 </html>

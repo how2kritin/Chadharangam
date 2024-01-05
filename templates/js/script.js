@@ -1,5 +1,6 @@
 const boardHtml = document.querySelector(".board");
 const body = document.querySelector("body");
+const result_div=document.querySelector("#result");
 let white_pov = true;
 let white_move = true;
 let clickedSqr = false;
@@ -12,22 +13,38 @@ let wQRookMoved = false,
   bQRookMoved = false;
 let bKingMoved = false,
   wKingMoved = false;
+let promotedPiece=0;
 let castlingPossible = false;
 let enPassant = -1;
 let legalMoves = [];
 let squares = [];
 let moves = [];
-let board = [
-  [-5, -2, -3, -9, -7, -3, -2, -5],
-  [-1, -1, -1, -1, -1, -1, -1, -1],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0, 0],
-  [1, 1, 1, 1, 1, 1, 1, 1],
-  [5, 2, 3, 9, 7, 3, 2, 5],
-];
+let board;
+const white_promotion=document.getElementById("white-promotion");
+const black_promotion=document.getElementById("black-promotion");
+const promoPieces=document.getElementsByClassName("promo-piece");
 //function that takes piece value as input and returns its name corresponding to its png
+
+function resetParameters(){
+  board = [
+    [-5, -2, -3, -9, -7, -3, -2, -5],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [5, 2, 3, 9, 7, 3, 2, 5],
+  ];
+  squares=[];
+  moves=[];
+  wQRookMoved = false;
+  wKRookMoved = false;
+  bKRookMoved = false;
+  bQRookMoved = false;
+  bKingMoved = false;
+  wKingMoved = false;
+}
 
 function intToPngName(piece) {
   let name;
@@ -42,6 +59,8 @@ function intToPngName(piece) {
 }
 
 function createBoard() {
+  resetParameters();
+  result_div.classList.toggle("invisible");
   //making board and storing references in squares 2d array
   for (let i = 0; i < 8; i++) {
     let row = [];
@@ -82,8 +101,8 @@ function findSqr(div_ref) {
   }
 }
 
-let pathToStaticFolder = `{{url_for('static', filename='')}}`;
 function addImgToSqr(square, piece) {
+  let pathToStaticFolder = `{{url_for('static', filename='')}}`; 
   console.log(piece);
   let img = document.createElement("img");
   img.classList.add("piece");
@@ -110,12 +129,40 @@ function isLegal(destSqr) {
   }
   return false;
 }
+
+for(let i=0;i<promoPieces.length;i++){
+  promoPieces[i].addEventListener("click",()=>{
+    promotedPiece=promoPieces[i].dataset.value;
+  })
+}
+
+function takePromotedPieceInput(){
+  return new Promise(function(resolve,reject){
+    let interval=setInterval(()=>{
+      if(promotedPiece) {
+        clearInterval(interval);
+        resolve(promotedPiece);
+      }
+    });
+  });
+}
+
 //function when a square is clicked
-function sqrClickedListener() {
+async function sqrClickedListener() {
   if (clickedSqr) {
     destinationSqr = findSqr(this);
     if (isLegal(destinationSqr)) {
-      movePiece(sourceSqr, destinationSqr);
+      if(board[sourceSqr[0]][sourceSqr[1]]===1||board[sourceSqr[0]][sourceSqr[1]]===-1){
+        if(white_move) white_promotion.classList.toggle("invisible");
+        else black_promotion.classList.toggle("invisible");
+        if(destinationSqr[0]===0||destinationSqr[0]===7){
+          promotedPiece=+await takePromotedPieceInput();
+          console.log("promoted "+promotedPiece);
+        }
+        if(white_move) white_promotion.classList.toggle("invisible");
+        else black_promotion.classList.toggle("invisible");
+      }
+      movePiece(sourceSqr, destinationSqr,promotedPiece);
       //updating moves
       moves.push([sourceSqr, destinationSqr]);
       //give the chance to other player
@@ -124,6 +171,7 @@ function sqrClickedListener() {
         data: "",
         source: sourceSqr,
         destination: destinationSqr,
+        promotedPiece ,
       });
       white_move = !white_move;
       if (isGameOver()) gameOver();
@@ -142,6 +190,7 @@ function sqrClickedListener() {
     ) {
       castlingPossible = false;
       enPassant = -1;
+      promotedPiece=0;
       clickedSqr = true;
       legalMoves = legalMovesFinder(
         sourceSqr,
@@ -158,7 +207,6 @@ function sqrClickedListener() {
 
 function highlightSqrs() {
   for (let i = 0; i < legalMoves.length; i++) {
-    // squares[legalMoves[i][0]][legalMoves[i][1]].style.border=(yes)?"2px solid black":"";
     squares[legalMoves[i][0]][legalMoves[i][1]].classList.toggle("selected");
   }
 }
@@ -483,13 +531,11 @@ function gameOver() {
     whoWon: whoWon,
   });
 
-  let result_div = document.createElement("div");
-  result_div.classList.add("result");
-  result_div.textContent = result;
-  body.appendChild(result_div);
+  result_div.textContent=result;
+  result_div.classList.toggle("invisible");
 }
 
-function movePiece(sourceSqr, destinationSqr) {
+function movePiece(sourceSqr, destinationSqr,promotedPiece) {
   debugger;
   //setting the values of castlingPossible and enPassant for this function locally
   if (
@@ -530,10 +576,8 @@ function movePiece(sourceSqr, destinationSqr) {
     board[sourceSqr[0]][sourceSqr[1]] === 1 ||
     board[sourceSqr[0]][sourceSqr[1]] === -1
   ) {
-    if (destinationSqr[0] === 0)
-      board[destinationSqr[0]][destinationSqr[1]] = 9;
-    else if (destinationSqr[0] === 7)
-      board[destinationSqr[0]][destinationSqr[1]] = -9;
+    if(destinationSqr[0]===0||destinationSqr[0]===7)
+      board[destinationSqr[0]][destinationSqr[1]] = promotedPiece;
   }
   board[sourceSqr[0]][sourceSqr[1]] = 0;
   //adding piece to final sqr
@@ -570,7 +614,7 @@ function makeAMove(move, restore) {
   try {
     //update the move
     moves.push(move);
-    movePiece(move[0], move[1]);
+    movePiece(move[0], move[1],move[3]);
     if (!restore) {
       white_move = !white_move;
       if (isGameOver()) gameOver();
@@ -583,10 +627,10 @@ function makeAMove(move, restore) {
 // Call makeAMove function after receiving response from server, only if it is this player's turn to move.
 socketio.on("play", (data) => {
   if (color !== data.moveMadeBy)
-    makeAMove([data.source, data.destination], false);
+    makeAMove([data.source, data.destination,data.moveMadeBy,data.promotedPiece], false);
 });
 
 // Restore state of game upon disconnection and the like.
 socketio.on("restoreState", (data) => {
-  makeAMove([data.source, data.destination, data.moveMadeBy], true);
+  makeAMove([data.source, data.destination, data.moveMadeBy,data.promotedPiece], true);
 });

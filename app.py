@@ -217,7 +217,7 @@ def sendPlayOfGame(data):
         moveMadeBy = "White"
     else:
         moveMadeBy = "Black"
-    emit("play", {"moveMadeBy": moveMadeBy, "source": data["source"], "destination": data["destination"]}, to=room_code)
+    emit("play", {"moveMadeBy": moveMadeBy, "source": data["source"], "destination": data["destination"],"promotedPiece":data["promotedPiece"]}, to=room_code)
     rooms[room_code]["allMoves"] += [[moveMadeBy, data["source"], data["destination"]]]
     print(f"Latest move by {username}'s ({moveMadeBy}) is piece from {data['source']} moved to piece at {data['destination']}")
 
@@ -271,7 +271,7 @@ def gameOver(data):
         rooms[room_code]["whoWon"] = ""
         rooms[room_code]["allMoves"] = []
 
-    emit("gameEnded", to=request.sid)
+    emit("gameEnded", to=room_code)
 
 
 @socketio.on("chat")
