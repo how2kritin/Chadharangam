@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request, session, url_for  #
 from flask_cors import CORS
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_bcrypt import Bcrypt  # Shall use bcrypt (Blowfish cypher) to hash passwords (one-way).
+from flask_session import Session
 import sqlite3
 import os  # to create a directory for the databases, if a directory doesn't exist already.
 import random
@@ -25,7 +26,8 @@ app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = True
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SECRET_KEY"] = "somerandosecretkeylol1729!!"
-socketio = SocketIO(app)
+Session(app)
+socketio = SocketIO(app, manage_session=False)
 bcrypt = Bcrypt(app)
 
 CORS(app)
@@ -273,12 +275,11 @@ def disconnect():
 def leaveRoom():
     username, room_code = session.get('username'), session.get('room_code')
     leave_room(room_code)
-    session['room_code'] = "hi"
     session.pop("room_code", None)
-    print(session)
     print(f"User {username} wanted to leave the room {room_code}")
     process_room_disconnection(username, room_code)
     emit("redirect", url_for("auth"), to=request.sid)
+
 
 def process_room_disconnection(username, room_code):
     roomsLock.acquire()
