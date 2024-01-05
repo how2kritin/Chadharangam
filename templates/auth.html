@@ -134,12 +134,13 @@
       <div class="right">
         <div class="message">
           <!--Print the error message for incorrect password, only if the password is incorrect. Will flash this as a message from the Flask server.-->
-          {% with messages = get_flashed_messages() %} {% if messages %} {% for
-          message in messages %}
-          <h2>{{message}}</h2>
-          {% endfor %} {% endif %} {% endwith %}
+          {% if alert != "" %}
+          <h2>{{alert}}</h2>
+          {% endif %}
         </div>
-        <form action={{url_for("handleUser")}} method="POST">
+        <div id="login-or-signup">
+        <form action='{{url_for("login")}}' method="POST">
+          <h1>Log in</h1>
           <div class="form-group">
             <label for="username">Username</label>
             <input
@@ -162,9 +163,53 @@
               required
             />
           </div>
+          <button type="submit" class="button" id="log-in-btn">Log in</button>
+        </form>
+          <button class="button" id="create-acc-btn" onclick="document.getElementById('create-account').showModal()">Or, create a new account</button>
+          <dialog id="create-account">
+            <h1>Create account</h1>
+            <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              class="form-control"
+              id="create-username"
+              name="create-username"
+              placeholder="Enter your username"
+              required
+            />
+          </div>
           <div class="form-group">
-            <label for="room_code"
-              >Please enter a room code if you have one</label
+            <label for="password">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="create-password"
+              name="create-password"
+              placeholder="Enter a password"
+              required
+            />
+          </div>
+            <div class="form-group">
+            <label for="password">Confirm Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="confirm-password"
+              name="confirm-password"
+              placeholder="Enter a password"
+              onkeyup="checkpasswords()"
+              required
+            />
+          </div>
+            <form method="dialog"><button id="create-acc-submit-btn" onclick="createNewAccount()">Create an account</button></form>
+          </dialog>
+          </div>
+        <div class="form-group" id="join-room" hidden>
+          <h1>Currently logged in as: {{loggedInUsername}}</h1>
+          <button class="button" id="create-new-room-btn">Create a new room</button>
+          <label for="room_code"
+            >Enter an existing room</label
             >
             <input
               type="text"
@@ -173,10 +218,82 @@
               name="room_code"
               placeholder="Enter a room code"
             />
+          <button id="join-room-btn">Join room</button>
+          <button id="logoutButton">Log out</button>
           </div>
-          <button type="submit" class="button">Submit</button>
-        </form>
       </div>
     </div>
+  <script>
+      const createUsername = document.getElementById("create-username");
+      const createPass = document.getElementById("create-password");
+      const createAccSubmitBtn = document.getElementById("create-acc-submit-btn");
+      const joinRoomDiv = document.getElementById("join-room");
+      const loginOrSignupDiv = document.getElementById("login-or-signup");
+      const createNewRoomBtn = document.getElementById("create-new-room-btn");
+      const joinRoomBtn = document.getElementById("join-room-btn");
+      const logOutBtn = document.getElementById("logoutButton");
+    function checkpasswords(){
+      const confirmPass = document.getElementById("confirm-password");
+      if(createPass.value === confirmPass.value) {
+        confirmPass.style.color = "green";
+        createAccSubmitBtn.disabled = false;
+      }
+      else {
+        confirmPass.style.color = "red";
+        createAccSubmitBtn.disabled = true;
+      }
+    }
+
+    function createNewAccount(){
+      // To be able to create a new account, an account with the same username shouldn't previously exist. Let the server handle this.
+      let data = new FormData();
+      data.append("username", createUsername.value);
+      data.append("password", createUsername.value);
+      fetch('{{url_for("signup")}}', {
+        "method": "POST",
+        "body": data,
+      }).then((response) => {
+        if(response.redirected){
+          window.location.href = response.url;
+        }
+      });
+    }
+
+    // If this condition holds, it means that the user is logged in.
+    if("{{loggedInUsername}}" !== "") {
+      joinRoomDiv.hidden = false;
+      loginOrSignupDiv.hidden = true;
+    }
+    else{ // Else, the user isn't logged in.
+      joinRoomDiv.hidden = true;
+      loginOrSignupDiv.hidden = false;
+    }
+
+    createNewRoomBtn.addEventListener("click", () => sendToRoom(true));
+    joinRoomBtn.addEventListener("click", () => sendToRoom(false));
+
+    // createNewRoom is a bool. It is true, if "Create a new room" button is clicked, and false if "Join room" button is clicked.
+    function sendToRoom(createNewRoom) {
+      let data = new FormData();
+      const roomCodeInput = document.getElementById("room_code");
+      if(!createNewRoom) data.append("room_code", roomCodeInput.value);
+      fetch('{{url_for("send_to_room")}}', {
+        "method": "POST",
+        "body": data,
+      }).then((response) => {
+        if(response.redirected){
+          window.location.href = response.url;
+        }
+      });
+      }
+
+    logOutBtn.addEventListener("click", () => {
+      fetch('{{url_for("logout")}}').then((response) => {
+        if(response.redirected){
+          window.location.href = response.url;
+        }
+      });
+    });
+  </script>
   </body>
 </html>

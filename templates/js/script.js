@@ -1,4 +1,4 @@
-const boardHtml = document.querySelector(".board");
+const boardHtml = document.querySelector("#entire-board");
 const body = document.querySelector("body");
 let white_pov = true;
 let white_move = true;
@@ -27,6 +27,31 @@ let board = [
   [1, 1, 1, 1, 1, 1, 1, 1],
   [5, 2, 3, 9, 7, 3, 2, 5],
 ];
+
+function resetGlobalVars(){
+  white_pov = true;
+  white_move = true;
+  clickedSqr = false;
+  over = false;
+  //parameters for castling
+  wQRookMoved = false; wKRookMoved = false; bKRookMoved = false; bQRookMoved = false;
+  bKingMoved = false; wKingMoved = false;
+  castlingPossible = false;
+  enPassant = -1;
+  legalMoves = [];
+  squares = [];
+  moves = [];
+  board = [
+    [-5, -2, -3, -9, -7, -3, -2, -5],
+    [-1, -1, -1, -1, -1, -1, -1, -1],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [5, 2, 3, 9, 7, 3, 2, 5],
+  ];
+}
 //function that takes piece value as input and returns its name corresponding to its png
 
 function intToPngName(piece) {
@@ -42,6 +67,7 @@ function intToPngName(piece) {
 }
 
 function createBoard() {
+  resetGlobalVars();
   //making board and storing references in squares 2d array
   for (let i = 0; i < 8; i++) {
     let row = [];
@@ -483,6 +509,17 @@ function gameOver() {
     whoWon: whoWon,
   });
 
+  createResultDiv(result);
+}
+
+// Receive info from the server that the game has ended in a forfeiture.
+socketio.on("forfeitureEnd", (data) => forfeitureReceiver(data));
+function forfeitureReceiver(data){
+  createResultDiv("Game over by forfeiture, " + data.whoWon + " wins!");
+  gameEndHandler();
+}
+
+function createResultDiv(result){
   let result_div = document.createElement("div");
   result_div.classList.add("result");
   result_div.textContent = result;
@@ -490,7 +527,6 @@ function gameOver() {
 }
 
 function movePiece(sourceSqr, destinationSqr) {
-  debugger;
   //setting the values of castlingPossible and enPassant for this function locally
   if (
     board[sourceSqr[0]][sourceSqr[1]] == 7 ||
