@@ -161,7 +161,7 @@
         window.location.href = destination;
       });
 
-      socketio.on("gameEnded", gameEndHandler);
+      socketio.on("gameEnded", () => gameEndHandler());
       function gameEndHandler(){
         console.log("The previous game ended. Going back to the waiting room.")
         gameBoard.innerHTML = ``;
