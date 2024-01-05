@@ -107,13 +107,9 @@ def login():
                 session['username'] = username
                 return redirect(url_for("waitForPlayer"))
         else:
-            print("New user, creating an account.")
-            cursor.execute("INSERT INTO USERS (username, passwordHash) VALUES (?, ?)", (username, passwordHash))
-            database.commit()
-            print("Successfully added this user to the database!")
-            session['username'] = username
-            session['alert'] = ""  # Reset the alert upon successful login.
-            return redirect(url_for("waitForPlayer"))
+            session['alert'] = "Unknown username. Please create an account."
+            print(f"{username} doesn't have an account.")
+            return redirect(url_for("auth"))
 
 
 @app.route("/signup", methods=['POST'])
