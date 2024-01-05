@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, session, flash, url_for  # Import Flask and render_template classes from the flask module.
+from flask import Flask, render_template, redirect, request, session, url_for  # Import Flask and render_template classes from the flask module.
 from flask_cors import CORS
 from flask_socketio import SocketIO, send, join_room, leave_room, emit
 from flask_bcrypt import Bcrypt  # Shall use bcrypt (Blowfish cypher) to hash passwords (one-way).
@@ -46,35 +46,25 @@ def generate_random_string(length):
 # All the routes and their associated functions:
 @app.route("/", methods=["POST", "GET"])
 def auth():
+    if 'room_code' in session:
+        print(f"User {session['username']} was previously in a room. Sending them back to that room.")
+        redirect(url_for("waitForPlayer"))
+    if 'alert' not in session:
+        session['alert'] = ""
     listOfQuotes = ["Chess players know how to mate!", "Google En Passant", "pawnhub.com", "Chess speaks for itself!",
                     "Always defend your bishop with your other bishop"]
     quote = random.choice(listOfQuotes)
-    return render_template("auth.html", quote=quote)
+    if 'username' in session:
+        return render_template("auth.html", quote=quote, alert=session['alert'], loggedInUsername=session['username'])
+    else:
+        return render_template("auth.html", quote=quote, alert=session['alert'], loggedInUsername="")
 
 
-@app.route("/userdata", methods=['POST'])
-def handleUser():
+@app.route("/login", methods=['POST'])
+def login():
     username = request.form.get('username')
     password = request.form.get('password')
     passwordHash = bcrypt.generate_password_hash(password).decode('UTF-8')
-    room_code = request.form.get('room_code')
-
-    if room_code:
-        print(f"Username is {username}, entered password's hash is {passwordHash}, room code entered is {room_code}.")
-        # Check if the entered room code is valid.
-        if room_code not in rooms:
-            flash(
-                "A room with this code doesn't exist. Please enter a valid room code, or don't enter a room code at all to create a new room.")
-            return redirect(url_for("auth"))
-
-    else:
-        print(
-            f"Username is {username}, entered password's hash is {passwordHash}. Generating a room code. Will use the room code if the username and password are valid.")
-        room_code = generate_random_string(4)
-        while room_code in rooms:
-            room_code = generate_random_string(4)
-        rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""},
-                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": "", "messages": []}
 
     # First, check if this user exists in the database.
     with sqlite3.connect('Databases/users.db') as database:
@@ -85,40 +75,98 @@ def handleUser():
 
         if len(data) != 0:  # Check if user already exists in the database
             if not bcrypt.check_password_hash(data[0][1], password):
-                flash(
-                    "This username already exists in the database, but the entered password is incorrect. You can either enter the correct password to log in, or use a different username to create an account.")
+                session['alert'] = "Incorrect password!"
                 return redirect(url_for("auth"))
             else:
                 print("Successfully logged in!")
-                session['username'], session['room_code'] = username, room_code
+                session['username'] = username
                 return redirect(url_for("waitForPlayer"))
         else:
             print("New user, creating an account.")
             cursor.execute("INSERT INTO USERS (username, passwordHash) VALUES (?, ?)", (username, passwordHash))
             database.commit()
             print("Successfully added this user to the database!")
-            session['username'], session['room_code'] = username, room_code
+            session['username'] = username
+            session['alert'] = ""  # Reset the alert upon successful login.
             return redirect(url_for("waitForPlayer"))
+
+
+@app.route("/signup", methods=['POST'])
+def signup():
+    session['alert'] = ""
+    username = request.form.get('username')
+    password = request.form.get('password')
+    passwordHash = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+    # First, check if this user exists in the database.
+    with sqlite3.connect('Databases/users.db') as database:
+        cursor = database.cursor()
+        query = f'SELECT username FROM USERS WHERE username="{username}"'
+        cursor.execute(query)
+        data = cursor.fetchall()  # List of tuples
+
+        if len(data) != 0:  # Check if user already exists in the database
+            session['alert'] = "This username already exists in the database."
+            print(f"Username {username} already exists in the database.")
+            return redirect(url_for("auth"))
+        else:
+            print("New user, creating an account.")
+            cursor.execute("INSERT INTO USERS (username, passwordHash) VALUES (?, ?)", (username, passwordHash))
+            database.commit()
+            print("Successfully added this user to the database!")
+            session['username'] = username
+            session['alert'] = ""  # Reset the alert upon successful signup.
+            return redirect(url_for("auth"))
+
+
+@app.route("/send_to_room", methods=['POST'])
+def send_to_room():
+    room_code = request.form.get('room_code')
+
+    if room_code:
+        # Check if the entered room code is valid.
+        if room_code not in rooms:
+            session['alert'] = "A room with this code doesn't exist."
+            print(f"User {session['username']} did not enter valid room code.")
+            return redirect(url_for("auth"))
+
+    else:
+        print(f"User {session['username']} requested to create a new room. Generating a room code.")
+        room_code = generate_random_string(4)
+        while room_code in rooms:
+            room_code = generate_random_string(4)
+        rooms[room_code] = {"members": 0, "allMoves": [], "player1": {"username": "", "clientID": ""},
+                            "player2": {"username": "", "clientID": ""}, "inProgress": False, "whoWon": "", "messages": []}
+
+    print(f"Sending user {session['username']} to room {room_code}")
+    session['room_code'] = room_code
+    session['alert'] = ""  # Reset the alert upon being added to a room successfully.
+    return redirect(url_for("waitForPlayer"))
 
 
 @app.route("/game", methods=['GET', 'POST'])
 def waitForPlayer():
     if request.method == "POST":
+        session.pop('room_code', None)
         logout()
 
     username, room_code = session.get('username'), session.get('room_code')
     if room_code is None or username is None or room_code not in rooms:
+        session.pop('room_code', None)
         return redirect(url_for("auth"))
     elif rooms[room_code]["members"] >= 2:
-        flash("Sorry, this room already has 2 players! Please join a different room, or create a new room.")
+        session.pop('room_code', None)
+        session['alert'] = "Sorry, this room already has 2 players! Please join a different room, or create a new room."
         return redirect(url_for("auth"))
     elif rooms[room_code]["inProgress"] and rooms[room_code]["player1"]["username"] != username and rooms[room_code]["player2"]["username"] != username:
-        flash("Sorry, this room has a game currently in progress. Please join a different room, or create a new room.")
+        session.pop('room_code', None)
+        session['alert'] = "Sorry, this room has a game currently in progress. Please join a different room, or create a new room."
         return redirect(url_for("auth"))
 
     return render_template("chessroom.html", username=username, room_code=room_code, messages=rooms[room_code]["messages"])
 
 
+@app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("auth"))
@@ -133,8 +181,10 @@ def script_js():
 def connect():
     username, room_code = session.get('username'), session.get('room_code')
     if room_code is None or username is None:
+        session.pop('room_code', None)
         return
     elif room_code not in rooms:  # If the user is in a room that doesn't exist as a valid room, then kick them out of that room.
+        session.pop('room_code', None)
         leave_room(room_code)
         return
 
@@ -179,25 +229,22 @@ def disconnect():
 
     if room_code in rooms:
         rooms[room_code]["members"] -= 1
-        if rooms[room_code]["members"] <= 0:  # If the last member has left the room, then delete the room itself.
-            del rooms[room_code]
 
-        else:
-            # If the game hasn't already begun, do this.
-            if not rooms[room_code]["inProgress"]:
-                if rooms[room_code]["player2"]["username"] == username:
-                    rooms[room_code]["player2"]["username"] = ""
-                    rooms[room_code]["player2"]["clientID"] = ""
-                else:
-                    rooms[room_code]["player1"]["username"] = rooms[room_code]["player2"]["username"]
-                    rooms[room_code]["player1"]["clientID"] = rooms[room_code]["player2"]["clientID"]
-                    rooms[room_code]["player2"]["username"] = ""
-                    rooms[room_code]["player2"]["clientID"] = ""
+        # If the game hasn't already begun, do this.
+        if not rooms[room_code]["inProgress"]:
+            if rooms[room_code]["player2"]["username"] == username:
+                rooms[room_code]["player2"]["username"] = ""
+                rooms[room_code]["player2"]["clientID"] = ""
+            else:
+                rooms[room_code]["player1"]["username"] = rooms[room_code]["player2"]["username"]
+                rooms[room_code]["player1"]["clientID"] = rooms[room_code]["player2"]["clientID"]
+                rooms[room_code]["player2"]["username"] = ""
+                rooms[room_code]["player2"]["clientID"] = ""
 
-            send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
-            print(f"{username} has left the room {room_code}")
+        send({"name": username, "message": "has left the room!", "playerCount": rooms[room_code]["members"], "player1": rooms[room_code]["player1"], "player2": rooms[room_code]["player2"]}, to=room_code)
+        print(f"{username} has left the room {room_code}")
 
-            # If the game has begun however, then, don't interchange the players. Keep them as is, i.e., don't do anything special in particular.
+        # If the game has begun however, then, don't interchange the players. Keep them as is, i.e., don't do anything special in particular.
 
 
 @socketio.on("game")
