@@ -29,7 +29,9 @@
       </div>
       <button id="startGame">Start Game</button>
     </div>
+
     <div id="messageAlert">nikes and crytin</div>
+
     <div class="chatWindow">
       <div class="chatBox">
         <h1>Code: {{room_code}}</h1>
@@ -57,8 +59,21 @@
     <div id="logout">
       <button value="leave" id="logoutButton">Leave Room</button>
     </div>
-
-    <div class="board" id="entire-board"></div>
+        <div id="game" class="invisible">
+        <div id="black-promotion" class="invisible">
+          <img src="{{url_for('static',filename='b9.png')}}" alt="" class="promo-piece"  data-value="-9">
+          <img src="{{url_for('static',filename='b5.png')}}" alt="" class="promo-piece" data-value="-5">
+          <img src="{{url_for('static',filename='b3.png')}}" alt="" class="promo-piece" data-value="-3">
+          <img src="{{url_for('static',filename='b2.png')}}" alt="" class="promo-piece" data-value="-2">
+        </div>
+        <div class="board" id="entire-board"></div>
+        <div id="white-promotion" class="invisible">
+          <img src="{{url_for('static',filename='w9.png')}}" alt="" class="promo-piece" data-value="9">
+          <img src="{{url_for('static',filename='w5.png')}}" alt="" class="promo-piece" data-value="5">
+          <img src="{{url_for('static',filename='w3.png')}}" alt="" class="promo-piece" data-value="3">
+          <img src="{{url_for('static',filename='w2.png')}}" alt="" class="promo-piece" data-value="2">
+        </div>
+    </div>
     <script
       src="{{url_for('script_js')}}"
       referrerpolicy="origin"
@@ -78,6 +93,7 @@
       const player2 = document.getElementById("player-2");
       const chatInput = document.getElementById("chatInput");
       const logOutButton = document.getElementById("logoutButton");
+      const game=document.getElementById("game");
       let currNumPlayers = 0;
       let color;
 
@@ -102,8 +118,8 @@
       socketio.on("start", (data) => {
         color = data.color;
         console.log(data.color);
-        waitingRoom.style.display = "none";
-        // waitingRoom.classList.add("invisible");
+        waitingRoom.classList.toggle("invisible");
+        game.classList.toggle("invisible");
         document.title = "Game in progress...";
         logOutButton.innerText = "Forfeit Game";
         logOutButton.value = "forfeit";
@@ -149,7 +165,8 @@
       function gameEndHandler(){
         console.log("The previous game ended. Going back to the waiting room.")
         gameBoard.innerHTML = ``;
-        waitingRoom.style.display = "block";
+        game.classList.toggle("invisible");
+        waitingRoom.classList.toggle("invisible");
         logOutButton.innerText = "Leave Room";
         logOutButton.value = "leave";
       }

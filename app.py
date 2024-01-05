@@ -326,7 +326,7 @@ def sendPlayOfGame(data):
         moveMadeBy = "White"
     else:
         moveMadeBy = "Black"
-    emit("play", {"moveMadeBy": moveMadeBy, "source": data["source"], "destination": data["destination"]}, to=room_code)
+    emit("play", {"moveMadeBy": moveMadeBy, "source": data["source"], "destination": data["destination"],"promotedPiece":data["promotedPiece"]}, to=room_code)
     rooms[room_code]["allMoves"] += [[moveMadeBy, data["source"], data["destination"]]]
     print(f"Latest move by {username}'s ({moveMadeBy}) is piece from {data['source']} moved to piece at {data['destination']}")
 
