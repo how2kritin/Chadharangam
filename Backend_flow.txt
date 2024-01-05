@@ -41,7 +41,6 @@ Latest:
 To-Do:
 Prevent the same user from being in the same room twice or two different rooms at once -> This shouldn't happen, but verify that it doesn't.
 Implement a timer for when a player leaves after a game has started, and shut down the room and award the remaining player the victory?
-Weird lengthy chessboard glitch. Possibly after abandoning the game and starting a new one on the same account? idk, happened to Nikesh when he left the game window as is and came back to it like 10 mins later
 
 ---------------------> For now, I'm going make player1 in the room play White and player2 in the room play Black. <---------------------
 
